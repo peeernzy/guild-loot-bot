@@ -239,21 +239,10 @@ def setup(bot):
             f"✅ Refunded {amount} to {member.display_name}"
         )
 
-    # ===== LEADERBOARD =====
-    @bot.tree.command(name="leaderboard", description="Top winners")
-    async def leaderboard_cmd(interaction: discord.Interaction):
-        sorted_lb = sorted(leaderboard.items(), key=lambda x: x[1], reverse=True)
-
-        if not sorted_lb:
-            await interaction.response.send_message("No data yet.")
-            return
-
-        msg = "\n".join([f"<@{uid}> - {wins} wins" for uid, wins in sorted_lb[:10]])
-        await interaction.response.send_message(f"🏆 Leaderboard:\n{msg}")
-
+    
     # ===== START TASK =====
     @bot.event
     async def on_ready():
         await bot.tree.sync()   # make sure slash commands register
         bot.loop.create_task(check_claims(bot))
-        print(f"Logged in as {bot.user}")
+        print(f"Logged in as {bot.user}")	
