@@ -252,8 +252,8 @@ def setup(bot):
         await interaction.response.send_message(f"🏆 Leaderboard:\n{msg}")
 
     # ===== START TASK =====
-  @bot.event
-async def on_ready():
-    await bot.tree.sync()   # make sure slash commands register
-    bot.loop.create_task(check_claims(bot))
-    print(f"Logged in as {bot.user}")
+    @bot.event
+    async def on_ready():
+        await bot.tree.sync()   # make sure slash commands register
+        bot.loop.create_task(check_claims(bot))
+        print(f"Logged in as {bot.user}")
