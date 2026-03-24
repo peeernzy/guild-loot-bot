@@ -13,6 +13,29 @@ loot_costs = {
     # add others...
 }
 
+async def check_claims(bot):
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        now = datetime.datetime.now()
+        for item, data in list(claims.items()):
+            if (now - data["timestamp"]).total_seconds() >= 86400:
+                if data["players"]:
+                    winner_id = random.choice(data["players"])
+                    guild = bot.guilds[0]
+                    winner = await guild.fetch_member(winner_id)
+                    channel = guild.text_channels[0]
+                    cost = loot_costs.get(item, {"cost": 0})["cost"]
+
+                    if not can_spend(winner_id, cost):
+                        await channel.send(f"⚠️ {winner.display_name} hit weekly cap.")
+                        continue
+                    spend_points(winner_id, cost)
+
+                    leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
+                    await channel.send(f"🎉 {winner.display_name} won {item}! Deducted {cost} points.")
+                del claims[item]
+        await asyncio.sleep(60)
+
 def setup(bot):
     @bot.tree.command(name="claim", description="Claim loot items")
     async def claim_cmd(interaction: discord.Interaction, item: str):
@@ -23,28 +46,8 @@ def setup(bot):
         claims[item]["players"].append(user_id)
         await interaction.response.send_message(f"{interaction.user.display_name} claimed {item}! Spin in 24h.")
 
-    async def check_claims():
-        await bot.wait_until_ready()
-        while not bot.is_closed():
-            now = datetime.datetime.now()
-            for item, data in list(claims.items()):
-                if (now - data["timestamp"]).total_seconds() >= 86400:
-                    if data["players"]:
-                        winner_id = random.choice(data["players"])
-                        guild = bot.guilds[0]
-                        winner = await guild.fetch_member(winner_id)
-                        channel = guild.text_channels[0]
-                        cost = loot_costs.get(item, {"cost": 0})["cost"]
+    # Instead of bot.loop, use setup_hook
+    async def start_tasks():
+        bot.loop.create_task(check_claims(bot))
 
-                        # enforce rules here...
-                        if not can_spend(winner_id, cost):
-                            await channel.send(f"⚠️ {winner.display_name} hit weekly cap.")
-                            continue
-                        spend_points(winner_id, cost)
-
-                        leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
-                        await channel.send(f"🎉 {winner.display_name} won {item}! Deducted {cost} points.")
-                    del claims[item]
-            await asyncio.sleep(60)
-
-    bot.loop.create_task(check_claims())
+    bot.setup_hook = start_tasks
