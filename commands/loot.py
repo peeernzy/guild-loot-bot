@@ -243,6 +243,6 @@ def setup(bot):
     # ===== START TASK =====
     @bot.event
     async def on_ready():
-        await bot.tree.sync()   # make sure slash commands register
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands: {[cmd.name for cmd in synced]}")
         bot.loop.create_task(check_claims(bot))
-        print(f"Logged in as {bot.user}")	
