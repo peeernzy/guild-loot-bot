@@ -42,7 +42,7 @@ loot_aliases = {
     "artisan": "Artisan"
 }
 
-CHANNEL_ID = 1443541335758864504  # 🔧 CHANGE THIS
+CHANNEL_ID = 1485956297227763752  # 🔧 CHANGE THIS
 
 # =========================
 # BACKGROUND TASK
