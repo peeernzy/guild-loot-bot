@@ -1,0 +1,14 @@
+{
+  "sindrisisland": {
+    "win": 100,
+    "lose": 50
+  },
+  "clansanctuary": {
+    "participated": 75,
+    "absent": 0
+  },
+  "guildwar": {
+    "win": 200,
+    "lose": 100
+  }
+}

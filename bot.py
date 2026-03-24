@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # IMPORT COMMAND MODULES
 # =========================
 # Each module should only define its own commands
-from commands import points, loot, leaderboard, items, summary, reset
+from commands import points, loot, leaderboard, items, summary, reset, attendance, helpcommands
 
 # Register commands from each module
 points.setup(bot)
@@ -26,6 +26,8 @@ leaderboard.setup(bot)
 items.setup(bot)
 summary.setup(bot)
 reset.setup(bot)
+attendance.setup(bot)     # Attendance workflow (export/import CSV)
+helpcommands.setup(bot)   # Command listing (/ncmd and /acmd)
 
 # =========================
 # EVENTS
