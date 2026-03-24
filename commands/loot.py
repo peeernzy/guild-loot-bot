@@ -9,7 +9,7 @@ loot_costs = {
     "Rare Weapon": {"cost": 5, "rule": "Bidding only, uncapped"},
     "Radiant Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},
     "Middle Horn": {"cost": 3, "rule": "Max 1 per week"},
-    "Lesser Horn": {"cost": 1, "rule": "Max 1 per week"},
+    "Lesser Horn": {"cost": 1, "rule": "Max 3 per week"},
     # add others...
 }
 
