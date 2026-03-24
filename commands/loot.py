@@ -13,6 +13,31 @@ loot_costs = {
     # add others...
 }
 
+# ✅ Short codes and aliases
+loot_aliases = {
+    "1": "Rare Equipment",
+    "2": "Rare Weapon",
+    "3": "Rare Materials",
+    "4": "Radiant Enchantment Stone",
+    "5": "Darkening Enchantment Stone",
+    "6": "Middle Horn",
+    "7": "Lesser Horn",
+    "8": "Silvarin",
+    "9": "Gwemix Piece Pouch",
+    "10": "Artisan",
+
+    "equip": "Rare Equipment",
+    "weapon": "Rare Weapon",
+    "mat": "Rare Materials",
+    "radstone": "Radiant Enchantment Stone",
+    "darkstone": "Darkening Enchantment Stone",
+    "mhorn": "Middle Horn",
+    "lhorn": "Lesser Horn",
+    "silv": "Silvarin",
+    "gwemix": "Gwemix Piece Pouch",
+    "artisan": "Artisan"
+}
+
 async def check_claims(bot):
     await bot.wait_until_ready()
     while not bot.is_closed():
@@ -37,16 +62,26 @@ async def check_claims(bot):
         await asyncio.sleep(60)
 
 def setup(bot):
-    @bot.tree.command(name="claim", description="Claim loot items")
-    async def claim_cmd(interaction: discord.Interaction, item: str):
+    @bot.tree.command(name="claim", description="Claim loot by code or alias")
+    async def claim_cmd(interaction: discord.Interaction, code: str):
+        if code not in loot_aliases:
+            await interaction.response.send_message(
+                "❌ Invalid code/alias. Use `/items` to see the list."
+            )
+            return
+
+        item = loot_aliases[code]
         user_id = interaction.user.id
         now = datetime.datetime.now()
+
         if item not in claims:
             claims[item] = {"players": [], "timestamp": now}
-        claims[item]["players"].append(user_id)
-        await interaction.response.send_message(f"{interaction.user.display_name} claimed {item}! Spin in 24h.")
 
-    # Instead of bot.loop, use setup_hook
+        claims[item]["players"].append(user_id)
+        await interaction.response.send_message(
+            f"{interaction.user.display_name} claimed {item}! Spin will occur 24h after first claim."
+        )
+
     async def start_tasks():
         bot.loop.create_task(check_claims(bot))
 
