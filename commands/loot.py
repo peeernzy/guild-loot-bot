@@ -52,7 +52,7 @@ async def check_claims(bot):
                     cost = loot_costs.get(item, {"cost": 0})["cost"]
 
                     if not can_spend(winner_id, cost):
-                        await channel.send(f"⚠️ {winner.display_name} hit weekly cap.")
+                        await channel.send(f"⚠️ {winner.display_name} hit weekly cap or lacks points.")
                         continue
                     spend_points(winner_id, cost)
 
@@ -72,14 +72,24 @@ def setup(bot):
 
         item = loot_aliases[code]
         user_id = interaction.user.id
-        now = datetime.datetime.now()
+        cost = loot_costs.get(item, {"cost": 0})["cost"]
 
+        # ✅ Block claim if user cannot afford
+        if not can_spend(user_id, cost):
+            await interaction.response.send_message(
+                f"❌ You don’t have enough points to claim {item}. "
+                f"It costs {cost} points."
+            )
+            return
+
+        now = datetime.datetime.now()
         if item not in claims:
             claims[item] = {"players": [], "timestamp": now}
 
         claims[item]["players"].append(user_id)
         await interaction.response.send_message(
-            f"{interaction.user.display_name} claimed {item}! Spin will occur 24h after first claim."
+            f"{interaction.user.display_name} claimed {item}! "
+            f"Spin will occur 24h after first claim."
         )
 
     async def start_tasks():
