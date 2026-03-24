@@ -1,5 +1,5 @@
 import discord, random, asyncio, datetime
-from .utils import can_spend, spend_points, weekly_spent
+from .utils import can_spend, spend_points, weekly_spent, remaining_claims
 
 claims = {}
 leaderboard = {}
@@ -51,10 +51,13 @@ async def check_claims(bot):
                     channel = guild.text_channels[0]
                     cost = loot_costs.get(item, {"cost": 0})["cost"]
 
-                    if not can_spend(winner_id, cost):
-                        await channel.send(f"⚠️ {winner.display_name} hit weekly cap or lacks points.")
+                    # ✅ Pass item into can_spend
+                    if not can_spend(winner_id, cost, item):
+                        await channel.send(f"⚠️ {winner.display_name} cannot afford {item} or hit weekly cap.")
                         continue
-                    spend_points(winner_id, cost)
+
+                    # ✅ Pass item into spend_points
+                    spend_points(winner_id, cost, item)
 
                     leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
                     await channel.send(f"🎉 {winner.display_name} won {item}! Deducted {cost} points.")
@@ -75,7 +78,7 @@ def setup(bot):
         cost = loot_costs.get(item, {"cost": 0})["cost"]
 
         # ✅ Block claim if user cannot afford
-        if not can_spend(user_id, cost):
+        if not can_spend(user_id, cost, item):
             await interaction.response.send_message(
                 f"❌ You don’t have enough points to claim {item}. "
                 f"It costs {cost} points."
@@ -87,10 +90,20 @@ def setup(bot):
             claims[item] = {"players": [], "timestamp": now}
 
         claims[item]["players"].append(user_id)
-        await interaction.response.send_message(
-            f"{interaction.user.display_name} claimed {item}! "
-            f"Spin will occur 24h after first claim."
-        )
+
+        # ✅ Show remaining claims if item has a weekly limit
+        remaining = remaining_claims(user_id, item)
+        if remaining is not None:
+            await interaction.response.send_message(
+                f"{interaction.user.display_name} claimed {item}! "
+                f"Spin will occur 24h after first claim.\n"
+                f"➡️ You have {remaining} {item} claims left this week."
+            )
+        else:
+            await interaction.response.send_message(
+                f"{interaction.user.display_name} claimed {item}! "
+                f"Spin will occur 24h after first claim."
+            )
 
     async def start_tasks():
         bot.loop.create_task(check_claims(bot))
