@@ -6,16 +6,19 @@ import discord
 points = {}
 
 # =========================
-# CORE FUNCTIONS (USED BY utils.py)
+# CORE FUNCTIONS (USED BY utils.py or other commands)
 # =========================
 def get_points(member_id: int) -> int:
+    """Return current balance for a member ID."""
     return points.get(member_id, 0)
 
-def add_points(member_id: int, amount: int):
+def add_points(member_id: int, amount: int) -> int:
+    """Add points to a member ID and return new balance."""
     points[member_id] = points.get(member_id, 0) + amount
     return points[member_id]
 
-def deduct_points(member_id: int, amount: int):
+def deduct_points(member_id: int, amount: int) -> int:
+    """Deduct points from a member ID (never below 0)."""
     points[member_id] = max(0, points.get(member_id, 0) - amount)
     return points[member_id]
 
@@ -37,8 +40,8 @@ def setup(bot):
     # ===== ADD POINTS =====
     @bot.tree.command(name="add", description="Add points to a member")
     async def add_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
-
-        allowed_roles = ["Moderator", "Elder"]
+        # Only Moderators and Elders can use this
+        allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
 
         if not has_permission:

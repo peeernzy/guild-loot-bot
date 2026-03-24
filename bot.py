@@ -5,13 +5,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# =========================
+# BOT SETUP
+# =========================
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True  # needed for role checks and summaries
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Import all command modules
+# =========================
+# IMPORT COMMAND MODULES
+# =========================
+# Each module should only define its own commands
 from commands import points, loot, leaderboard, items, summary, reset
 
+# Register commands from each module
 points.setup(bot)
 loot.setup(bot)
 leaderboard.setup(bot)
@@ -19,13 +27,19 @@ items.setup(bot)
 summary.setup(bot)
 reset.setup(bot)
 
+# =========================
+# EVENTS
+# =========================
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
+    print(f"✅ Logged in as {bot.user}")
     try:
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} slash commands")
+        print(f"📌 Synced {len(synced)} slash commands")
     except Exception as e:
-        print(e)
+        print(f"❌ Sync error: {e}")
 
+# =========================
+# RUN BOT
+# =========================
 bot.run(os.getenv("BOT_TOKEN"))
