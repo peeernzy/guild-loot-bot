@@ -7,9 +7,23 @@ def setup(bot):
         if not points:
             await interaction.response.send_message("No points recorded yet.")
             return
-        summary = "\n".join([
-            f"{interaction.guild.get_member(uid).display_name}: {pts}"
+
+        # Collect valid members with points
+        entries = [
+            (interaction.guild.get_member(uid), pts)
             for uid, pts in points.items()
             if interaction.guild.get_member(uid) is not None
-        ])
-        await interaction.response.send_message(f"📊 Points Summary:\n{summary}")
+        ]
+
+        if not entries:
+            await interaction.response.send_message("No valid members with points found.")
+            return
+
+        # Sort by points (descending)
+        entries.sort(key=lambda x: x[1], reverse=True)
+
+        # Build summary lines
+        summary_lines = [f"{member.display_name}: {pts}" for member, pts in entries]
+
+        summary_text = "\n".join(summary_lines)
+        await interaction.response.send_message(f"📊 Points Summary:\n{summary_text}")
