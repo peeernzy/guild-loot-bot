@@ -252,6 +252,8 @@ def setup(bot):
         await interaction.response.send_message(f"🏆 Leaderboard:\n{msg}")
 
     # ===== START TASK =====
-    @bot.event
-    async def on_ready():
-        bot.loop.create_task(check_claims(bot))
+   @bot.event
+async def on_ready():
+    await bot.tree.sync()
+    bot.loop.create_task(check_claims(bot))
+    print(f"Logged in as {bot.user}")
