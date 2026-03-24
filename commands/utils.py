@@ -72,3 +72,16 @@ def remaining_claims(member_id: int, item: str) -> int:
     if item == "Lesser Horn":
         return max(0, 3 - count)
     return None  # unlimited items
+
+def add_points(member_id: int, amount: int):
+    """Refund points to a member (reduce their weekly spent)."""
+    current_week = _current_week()
+
+    record = weekly_spent.get(member_id, {"week": current_week, "spent": 0})
+    if record["week"] != current_week:
+        record = {"week": current_week, "spent": 0}
+
+    # ✅ Subtract from spent to simulate refund
+    record["spent"] = max(0, record["spent"] - amount)
+    weekly_spent[member_id] = record
+    return record["spent"]
