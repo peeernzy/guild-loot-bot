@@ -11,10 +11,10 @@ loot_costs = {
     "Rare Weapon": {"cost": 5, "rule": "Bidding only, uncapped"},
     "Rare Materials": {"cost": 1, "rule": "Max 5 per member"},
     "Radiant Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},
-    "Darkening Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},  # ✅ added
+    "Darkening Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},
     "Middle Horn": {"cost": 3, "rule": "Max 1 per week"},
     "Lesser Horn": {"cost": 1, "rule": "Max 3 per week"},
-    "Silvarin": {"cost": 1, "rule": "Max 5 per member"},  # ✅ added
+    "Silvarin": {"cost": 1, "rule": "Max 5 per member"},
     "Gwemix Piece Pouch": {"cost": 10, "rule": "Bidding only, uncapped"},
     "Artisan": {"cost": 10, "rule": "Bidding only, uncapped"},
 }
@@ -49,7 +49,6 @@ CHANNEL_ID = 1485956297227763752  # 🔧 CHANGE THIS
 # =========================
 async def check_claims(bot):
     await bot.wait_until_ready()
-
     while not bot.is_closed():
         now = datetime.datetime.now()
         channel = bot.get_channel(CHANNEL_ID)
@@ -137,7 +136,6 @@ def setup(bot):
         if item not in claims:
             claims[item] = {"players": [], "timestamp": now}
 
-        # ✅ prevent spam duplicate
         if user_id not in claims[item]["players"]:
             claims[item]["players"].append(user_id)
 
@@ -145,7 +143,6 @@ def setup(bot):
 
         remaining = remaining_claims(user_id, item)
         msg = f"{interaction.user.display_name} claimed {item}!"
-
         if remaining is not None:
             msg += f"\n➡️ Remaining this week: {remaining}"
 
@@ -181,8 +178,6 @@ def setup(bot):
             bids[item] = {"players": {}, "timestamp": now}
 
         current_bid = bids[item]["players"].get(user_id, 0)
-
-        # ✅ prevent lowering bid
         if amount <= current_bid:
             await interaction.response.send_message(
                 f"❌ Must bid higher than {current_bid}."
@@ -199,7 +194,6 @@ def setup(bot):
     # ===== GRANT =====
     @bot.tree.command(name="grant", description="Grant loot")
     async def grant_cmd(interaction: discord.Interaction, member: discord.Member, code: str, cost: int = None):
-
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
@@ -227,7 +221,6 @@ def setup(bot):
     # ===== REFUND =====
     @bot.tree.command(name="refund", description="Refund points")
     async def refund_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
-
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
@@ -239,7 +232,7 @@ def setup(bot):
             f"✅ Refunded {amount} to {member.display_name}"
         )
 
-    
+
     # ===== START TASK =====
     @bot.event
     async def on_ready():
