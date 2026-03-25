@@ -20,7 +20,7 @@ COMMAND_DETAILS = {
     "importattendance": "Upload and process attendance records.",
     "listevents": "View the list of configured guild events.",
     "setevent": "Create or update the active event setup.",
-    "endbidding": "Close bidding and select the winning bidder.",
+    "endbid": "Close bidding and award the highest bidder.",
     "award": "Manually award an item to a selected member.",
     "clearclaims": "Remove expired loot claims.",
     "reset": "Reset bot tracking data when needed.",
@@ -37,7 +37,7 @@ def setup(bot):
         # Define admin-only commands to exclude
         admin_cmds = {
             "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "endbidding", "award", "clearclaims",
+            "listevents", "setevent", "endbid", "award", "clearclaims",
             "reset", "xid", "whois", "acmd"
         }
 
@@ -76,7 +76,7 @@ def setup(bot):
         # Define admin-only commands
         admin_cmds = {
             "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "endbidding", "award", "clearclaims",
+            "listevents", "setevent", "endbid", "award", "clearclaims",
             "reset", "xid", "whois"
         }
 
@@ -84,7 +84,7 @@ def setup(bot):
 
         # Group into categories
         points_tools = [f"/{c}" for c in cmds if c in {"add", "refund"}]
-        loot_tools = [f"/{c}" for c in cmds if c in {"grant", "endbidding", "award", "clearclaims"}]
+        loot_tools = [f"/{c}" for c in cmds if c in {"grant", "endbid", "award", "clearclaims"}]
         attendance = [f"/{c}" for c in cmds if c in {"getids", "exportids", "importcsv", "importattendance"}]
         events = [f"/{c}" for c in cmds if c in {"listevents", "setevent"}]
         system = [f"/{c}" for c in cmds if c in {"reset"}]

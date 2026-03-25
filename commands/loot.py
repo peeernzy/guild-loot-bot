@@ -249,8 +249,8 @@ def setup(bot):
 
         await interaction.response.send_message(embed=embed)
 
-    # ===== END BIDDING (AUTO-SELECT HIGHEST BIDDER) =====
-    @bot.tree.command(name="endbidding", description="End bidding for an item")
+    # ===== END BID (AUTO-SELECT HIGHEST BIDDER) =====
+    @bot.tree.command(name="endbid", description="Close bidding for an item")
     async def end_bidding_cmd(interaction: discord.Interaction, item: str):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
