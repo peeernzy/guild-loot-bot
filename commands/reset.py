@@ -1,5 +1,5 @@
 import discord
-from .points import points
+from .points import points, save_points
 from .loot import claims, leaderboard, weekly_spent
 
 def setup(bot):
@@ -17,6 +17,7 @@ def setup(bot):
             return
 
         points.clear()
+        save_points()
         claims.clear()
         leaderboard.clear()
         weekly_spent.clear()

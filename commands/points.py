@@ -1,4 +1,8 @@
 import discord
+import json
+import os
+
+POINTS_FILE = "points_data.json"
 
 # =========================
 # STORAGE
@@ -6,21 +10,45 @@ import discord
 points = {}
 
 # =========================
+# PERSISTENCE
+# =========================
+def load_points():
+    """Load points from JSON file at bot startup."""
+    global points
+    if os.path.exists(POINTS_FILE):
+        with open(POINTS_FILE, "r") as f:
+            points = json.load(f)
+    else:
+        points = {}
+
+def save_points():
+    """Save points to JSON file after each change."""
+    with open(POINTS_FILE, "w") as f:
+        json.dump(points, f, indent=4)
+
+# Load on import
+load_points()
+
+# =========================
 # CORE FUNCTIONS (USED BY utils.py or other commands)
 # =========================
 def get_points(member_id: int) -> int:
     """Return current balance for a member ID."""
-    return points.get(member_id, 0)
+    return points.get(str(member_id), 0)
 
 def add_points(member_id: int, amount: int) -> int:
     """Add points to a member ID and return new balance."""
-    points[member_id] = points.get(member_id, 0) + amount
-    return points[member_id]
+    member_id_str = str(member_id)
+    points[member_id_str] = points.get(member_id_str, 0) + amount
+    save_points()
+    return points[member_id_str]
 
 def deduct_points(member_id: int, amount: int) -> int:
     """Deduct points from a member ID (never below 0)."""
-    points[member_id] = max(0, points.get(member_id, 0) - amount)
-    return points[member_id]
+    member_id_str = str(member_id)
+    points[member_id_str] = max(0, points.get(member_id_str, 0) - amount)
+    save_points()
+    return points[member_id_str]
 
 # =========================
 # DISCORD COMMANDS

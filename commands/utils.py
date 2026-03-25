@@ -1,9 +1,10 @@
 import datetime
+from .points import get_points as get_member_points, save_points
 
 # =========================
 # DATA STORAGE
 # =========================
-points_data = {}           # ✅ REAL POINTS STORAGE
+points_data = {}           # ✅ REAL POINTS STORAGE (now backed by points.json)
 weekly_spent = {}          # tracks total points spent per week
 weekly_item_claims = {}    # tracks item-specific claims per week
 
@@ -14,8 +15,8 @@ def _current_week():
     return datetime.date.today().isocalendar()[1]
 
 def get_points(member_id: int) -> int:
-    """Get user's current points."""
-    return points_data.get(member_id, 0)
+    """Get user's current points (from persistent storage)."""
+    return get_member_points(member_id)
 
 # =========================
 # MAIN CHECK
@@ -23,7 +24,7 @@ def get_points(member_id: int) -> int:
 def can_spend(member_id: int, amount: int, item: str = None) -> bool:
     current_week = _current_week()
 
-    # ✅ CHECK REAL POINTS (FIXED)
+    # ✅ CHECK REAL POINTS (from persistent storage)
     if get_points(member_id) < amount:
         return False
 
@@ -60,8 +61,9 @@ def can_spend(member_id: int, amount: int, item: str = None) -> bool:
 def spend_points(member_id: int, amount: int, item: str = None):
     current_week = _current_week()
 
-    # ✅ DEDUCT REAL POINTS
-    points_data[member_id] = get_points(member_id) - amount
+    # ✅ DEDUCT REAL POINTS (and save to persistent storage)
+    from .points import deduct_points
+    deduct_points(member_id, amount)
 
     # Weekly total record
     record = weekly_spent.get(member_id, {"week": current_week, "spent": 0})
@@ -82,9 +84,9 @@ def spend_points(member_id: int, amount: int, item: str = None):
 # ADD POINTS (REWARD)
 # =========================
 def add_points(member_id: int, amount: int):
-    """Add points to user."""
-    points_data[member_id] = get_points(member_id) + amount
-    return points_data[member_id]
+    """Add points to user (persists to file)."""
+    from .points import add_points as add_member_points
+    return add_member_points(member_id, amount)
 
 # =========================
 # REMAINING CLAIMS

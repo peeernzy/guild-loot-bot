@@ -4,26 +4,14 @@ from .points import points
 def setup(bot):
     @bot.tree.command(name="summary", description="Show all balances")
     async def summary_cmd(interaction: discord.Interaction):
-        # --- MIGRATION STEP ---
-        migrated = {}
-        for key, pts in list(points.items()):
-            if isinstance(key, str):  # old username-based keys
-                member = discord.utils.get(interaction.guild.members, name=key)
-                if member:
-                    migrated[member.id] = migrated.get(member.id, 0) + pts
-                del points[key]
-            else:
-                migrated[key] = migrated.get(key, 0) + pts
-        points.update(migrated)
-
         if not points:
             await interaction.response.send_message("No points recorded yet.")
             return
 
         entries = [
-            (interaction.guild.get_member(uid), pts)
+            (interaction.guild.get_member(int(uid)), pts)
             for uid, pts in points.items()
-            if interaction.guild.get_member(uid) is not None
+            if interaction.guild.get_member(int(uid)) is not None
         ]
 
         if not entries:
