@@ -6,6 +6,14 @@ claims = {}
 bids = {}
 leaderboard = {}
 
+def format_time_left(seconds: float) -> str:
+    if seconds <= 0:
+        return "Expired"
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    return f"{h:02d}h:{m:02d}m:{s:02d}s"
+
 # Load loot items from JSON file
 def load_loot_items():
     try:
@@ -155,6 +163,7 @@ def setup(bot):
             color=discord.Color.blue()
         )
 
+        now = datetime.datetime.now()
         for item, data in sorted(claims.items()):
             player_list = []
             for player_id in data["players"]:
@@ -164,9 +173,11 @@ def setup(bot):
             
             if player_list:
                 cost = loot_costs.get(item, {}).get("cost", 0)
+                time_left = 86400 - (now - data["timestamp"]).total_seconds()
+                timer = format_time_left(time_left)
                 embed.add_field(
                     name=f"{item} ({cost} pts)",
-                    value="\n".join(player_list),
+                    value="\n".join(player_list) + f"\n\n⏰ {timer}",
                     inline=False
                 )
 
@@ -185,6 +196,7 @@ def setup(bot):
             color=discord.Color.gold()
         )
 
+        now = datetime.datetime.now()
         for item, bid_data in sorted(bids.items()):
             if bid_data["players"]:
                 # Get highest bid
@@ -199,9 +211,11 @@ def setup(bot):
                         marker = "👑" if player_id == highest_bidder_id else "  "
                         bid_list.append(f"{marker} {member.display_name}: {amount} pts")
                 
+                time_left = 86400 - (now - bid_data["timestamp"]).total_seconds()
+                timer = format_time_left(time_left)
                 embed.add_field(
                     name=f"{item}",
-                    value="\n".join(bid_list),
+                    value="\n".join(bid_list) + f"\n\n⏰ {timer}",
                     inline=False
                 )
 
@@ -263,7 +277,8 @@ def setup(bot):
         channel = interaction.guild.get_channel(CHANNEL_ID)
         if channel:
             await channel.send(
-                f"🎉 **Bidding Ended!**\n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
+                f"🎉 **Bidding Ended!**\
+n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
             )
 
         await interaction.response.send_message(
