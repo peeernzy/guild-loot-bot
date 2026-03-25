@@ -105,7 +105,7 @@ async def check_claims(bot):
 def setup(bot):
 
     # ===== CLAIM =====
-    @bot.tree.command(name="claim", description="Claim loot")
+    @bot.tree.command(name="claim", description="Claim a loot item")
     async def claim_cmd(interaction: discord.Interaction, code: str):
         if code not in loot_aliases:
             await interaction.response.send_message("❌ Invalid code.")
@@ -142,7 +142,7 @@ def setup(bot):
         await interaction.response.send_message(msg)
 
     # ===== BID =====
-    @bot.tree.command(name="bid", description="Bid on loot")
+    @bot.tree.command(name="bid", description="Place a bid on an item")
     async def bid_cmd(interaction: discord.Interaction, code: str, amount: int):
         if code not in loot_aliases:
             await interaction.response.send_message("❌ Invalid code.")
@@ -185,7 +185,7 @@ def setup(bot):
         )
 
     # ===== VIEW CLAIMS LEADERBOARD =====
-    @bot.tree.command(name="claimsleaderboard", description="View all current item claims")
+    @bot.tree.command(name="claimsleaderboard", description="View active item claims")
     async def claims_leaderboard_cmd(interaction: discord.Interaction):
         if not claims:
             await interaction.response.send_message("📋 No active claims.")
@@ -215,7 +215,7 @@ def setup(bot):
         await interaction.response.send_message(embed=embed)
 
     # ===== VIEW BIDS LEADERBOARD =====
-    @bot.tree.command(name="bidsleaderboard", description="View all current bids")
+    @bot.tree.command(name="bidsleaderboard", description="View active bids")
     async def bids_leaderboard_cmd(interaction: discord.Interaction):
         if not bids:
             await interaction.response.send_message("🏆 No active bids.")
@@ -250,7 +250,7 @@ def setup(bot):
         await interaction.response.send_message(embed=embed)
 
     # ===== END BIDDING (AUTO-SELECT HIGHEST BIDDER) =====
-    @bot.tree.command(name="endbidding", description="Moderator-only: End bidding and announce winner (auto-select highest bidder)")
+    @bot.tree.command(name="endbidding", description="End bidding for an item")
     async def end_bidding_cmd(interaction: discord.Interaction, item: str):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
@@ -310,7 +310,7 @@ def setup(bot):
         )
 
     # ===== AWARD (MANUAL DISTRIBUTION) =====
-    @bot.tree.command(name="award", description="Moderator-only: Manually award item to a claimer")
+    @bot.tree.command(name="award", description="Award an item to a member")
     async def award_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
@@ -362,7 +362,7 @@ def setup(bot):
         )
 
     # ===== CLEAR EXPIRED CLAIMS =====
-    @bot.tree.command(name="clearclaims", description="Moderator-only: Clear expired claims (older than 7 days)")
+    @bot.tree.command(name="clearclaims", description="Clear expired claims")
     async def clear_claims_cmd(interaction: discord.Interaction):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
@@ -386,7 +386,7 @@ def setup(bot):
             await interaction.response.send_message("✅ No expired claims to clear.", ephemeral=True)
 
     # ===== GRANT =====
-    @bot.tree.command(name="grant", description="Grant loot")
+    @bot.tree.command(name="grant", description="Grant a loot item")
     async def grant_cmd(interaction: discord.Interaction, member: discord.Member, code: str, cost: int = None):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
@@ -413,7 +413,7 @@ def setup(bot):
         )
 
     # ===== REFUND =====
-    @bot.tree.command(name="refund", description="Refund points")
+    @bot.tree.command(name="refund", description="Refund member points")
     async def refund_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)

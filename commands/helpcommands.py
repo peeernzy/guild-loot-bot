@@ -4,37 +4,48 @@ COMMAND_DETAILS = {
     "points": "View your current loot points balance.",
     "leaderboard": "See the current guild rankings by points.",
     "items": "Browse the available loot items and rewards.",
+    "claim": "Claim an available loot item using its code.",
+    "bid": "Place a bid on a loot item.",
+    "claimsleaderboard": "View the current list of active loot claims.",
+    "bidsleaderboard": "View the current bidding standings.",
     "summary": "Check the latest event and loot summary.",
     "xid": "Display your Discord ID or another member's ID.",
     "whois": "Look up a member using their Discord ID.",
+    "add": "Add points to a member account.",
+    "refund": "Return points to a member.",
+    "grant": "Award a loot item directly to a member.",
     "getids": "Generate the member ID list for attendance tracking.",
     "exportids": "Export saved member IDs for record keeping.",
     "importcsv": "Import attendance data from a CSV file.",
     "importattendance": "Upload and process attendance records.",
     "listevents": "View the list of configured guild events.",
     "setevent": "Create or update the active event setup.",
+    "endbidding": "Close bidding and select the winning bidder.",
+    "award": "Manually award an item to a selected member.",
+    "clearclaims": "Remove expired loot claims.",
     "reset": "Reset bot tracking data when needed.",
 }
 
 def setup(bot):
 
     # Normal user commands (dynamic + categories)
-    @bot.tree.command(name="ncmd", description="Show all commands available for normal users")
+    @bot.tree.command(name="ncmd", description="View user commands")
     async def normal_cmds(interaction: discord.Interaction):
         # Get all registered commands
         all_cmds = [cmd.name for cmd in bot.tree.get_commands()]
 
         # Define admin-only commands to exclude
         admin_cmds = {
-            "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "reset", "xid", "whois", "acmd"
+            "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
+            "listevents", "setevent", "endbidding", "award", "clearclaims",
+            "reset", "xid", "whois", "acmd"
         }
 
         # Filter out admin commands
         user_cmds = [c for c in all_cmds if c not in admin_cmds]
 
         # Group into categories
-        gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items"}]
+        gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items", "claim", "bid", "claimsleaderboard", "bidsleaderboard"}]
         info = [f"/{c}" for c in user_cmds if c in {"summary"}]
 
         lines = ["## Normal User Commands", "Clean access to your everyday guild tools.\n"]
@@ -51,7 +62,7 @@ def setup(bot):
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
     # Admin commands (Moderator/Elder only, dynamic + categories)
-    @bot.tree.command(name="acmd", description="Show all commands available for Moderators/Elders")
+    @bot.tree.command(name="acmd", description="View admin commands")
     async def admin_cmds(interaction: discord.Interaction):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
@@ -64,13 +75,16 @@ def setup(bot):
 
         # Define admin-only commands
         admin_cmds = {
-            "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "reset", "xid", "whois"
+            "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
+            "listevents", "setevent", "endbidding", "award", "clearclaims",
+            "reset", "xid", "whois"
         }
 
         cmds = [c for c in all_cmds if c in admin_cmds]
 
         # Group into categories
+        points_tools = [f"/{c}" for c in cmds if c in {"add", "refund"}]
+        loot_tools = [f"/{c}" for c in cmds if c in {"grant", "endbidding", "award", "clearclaims"}]
         attendance = [f"/{c}" for c in cmds if c in {"getids", "exportids", "importcsv", "importattendance"}]
         events = [f"/{c}" for c in cmds if c in {"listevents", "setevent"}]
         system = [f"/{c}" for c in cmds if c in {"reset"}]
@@ -78,7 +92,17 @@ def setup(bot):
 
         lines = ["## Admin Commands", "Administrative tools for Moderators and Elders.\n"]
 
+        if points_tools:
+            lines.append("💰 **Points Management**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in points_tools)
+
+        if loot_tools:
+            lines.append("")
+            lines.append("🎁 **Loot Management**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in loot_tools)
+
         if attendance:
+            lines.append("")
             lines.append("📝 **Attendance Tools**")
             lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in attendance)
 
@@ -100,7 +124,7 @@ def setup(bot):
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
     # Extract ID command
-    @bot.tree.command(name="xid", description="Extract and display a user's Discord ID")
+    @bot.tree.command(name="xid", description="View a Discord ID")
     async def extract_id(interaction: discord.Interaction, member: discord.Member = None):
         member = member or interaction.user
         await interaction.response.send_message(
@@ -109,7 +133,7 @@ def setup(bot):
         )
 
     # WhoIs command - identify user by ID
-    @bot.tree.command(name="whois", description="Identify a user by their Discord ID")
+    @bot.tree.command(name="whois", description="Look up a user by ID")
     async def whois(interaction: discord.Interaction, user_id: str):
         try:
             # Convert string to int

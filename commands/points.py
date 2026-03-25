@@ -67,7 +67,7 @@ def deduct_points(member_id: int, amount: int) -> int:
 def setup(bot):
 
     # ===== CHECK POINTS =====
-    @bot.tree.command(name="points", description="Check a member's points")
+    @bot.tree.command(name="points", description="Check point balance")
     async def points_cmd(interaction: discord.Interaction, member: discord.Member = None):
         member = member or interaction.user
         balance = get_points(member.id)
