@@ -218,6 +218,11 @@ def reset_all_points():
         conn.commit()
 
 
+def save_points():
+    """Compatibility helper for older modules. Database writes are immediate."""
+    return None
+
+
 def setup(bot):
 
     @bot.tree.command(name="points", description="Check point balance")
