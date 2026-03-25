@@ -21,7 +21,7 @@ def setup(bot):
             )
             return
 
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message("🧹 Clearing channel...", ephemeral=True, delete_after=3)
 
         # Delete bot messages first (including this one after defer)
         bot_msgs = []
