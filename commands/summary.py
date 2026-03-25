@@ -1,9 +1,10 @@
 import discord
-from .points import points
+from .points import get_all_points
 
 def setup(bot):
     @bot.tree.command(name="summary", description="Show all balances")
     async def summary_cmd(interaction: discord.Interaction):
+        points = get_all_points()
         if not points:
             await interaction.response.send_message("No points recorded yet.")
             return

@@ -1,5 +1,5 @@
 import discord
-from .points import points, save_points
+from .points import reset_all_points
 from .loot import claims, leaderboard, weekly_spent
 
 def setup(bot):
@@ -16,8 +16,7 @@ def setup(bot):
             print(f"[SECURITY] {interaction.user} tried to use /reset without permission.")
             return
 
-        points.clear()
-        save_points()
+        reset_all_points()
         claims.clear()
         leaderboard.clear()
         weekly_spent.clear()
