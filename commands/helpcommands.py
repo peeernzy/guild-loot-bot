@@ -12,7 +12,7 @@ COMMAND_DETAILS = {
     "xid": "Display your Discord ID or another member's ID.",
     "whois": "Look up a member using their Discord ID.",
     "add": "Add points to a member account.",
-    "refund": "Return points to a member.",
+    "refund": "Deduct points from a member.",
     "grant": "Award a loot item directly to a member.",
     "getids": "Generate the member ID list for attendance tracking.",
     "exportids": "Export saved member IDs for record keeping.",

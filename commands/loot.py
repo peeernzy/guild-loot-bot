@@ -413,17 +413,18 @@ def setup(bot):
         )
 
     # ===== REFUND =====
-    @bot.tree.command(name="refund", description="Refund member points")
+    @bot.tree.command(name="refund", description="Deduct points from a member")
     async def refund_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        add_points(member.id, amount)
+        new_balance = spend_points(member.id, amount)
         log_event("refund", member.id, "Points", amount)
 
         await interaction.response.send_message(
-            f"✅ Refunded {amount} to {member.display_name}"
+            f"✅ Deducted {amount} points from {member.display_name}.\n"
+            f"💰 New Balance: {new_balance}"
         )
 
 
