@@ -35,9 +35,9 @@ def setup(bot):
         # Build CSV template for attendance
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["member_id", "event", "outcome"])  # header
+        writer.writerow(["display_name", "member_id", "event", "outcome"])  # header
         for member in interaction.guild.members:
-            writer.writerow([member.id, "", ""])  # empty event and outcome for manual filling
+            writer.writerow([member.display_name, member.id, "", ""])  # empty event and outcome for manual filling
 
         # Send as file
         csv_file = discord.File(io.BytesIO(output.getvalue().encode()), filename="attendance_template.csv")
