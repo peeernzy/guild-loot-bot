@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # IMPORT COMMAND MODULES
 # =========================
 # Each module should only define its own commands
-from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export
+from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid
 
 # Register commands from each module
 points.setup(bot)
@@ -34,8 +34,10 @@ goodbye.setup(bot)        # Goodbye messages for members leaving
 cls.setup(bot)            # Channel cleanup command
 item_import.setup(bot)    # CSV loot item import command
 item_export.setup(bot)    # CSV loot item export command
+claim.setup(bot)          # Claim command
+bid.setup(bot)            # Bid command
 
-print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export")
+print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid")
 
 # =========================
 # EVENTS
@@ -47,7 +49,7 @@ async def on_ready():
         registered = [cmd.name for cmd in bot.tree.get_commands()]
         print(f"🧾 Registered commands before sync ({len(registered)}): {registered}")
         synced = await bot.tree.sync()
-        print(f"📌 Synced {len(synced)} slash commands")
+        print(f"📌 Synced {len(synced)} slash commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         print(f"❌ Sync error: {e}")
 

@@ -9,41 +9,68 @@ leaderboard = {}
 # Load loot items from JSON file
 def load_loot_items():
     try:
-        with open("loot_items.json", "r") as f:
+        with open("loot_items.json", "r", encoding="utf-8") as f:
             data = json.load(f)
             items = data.get("items", [])
-            
-            # Build loot_costs dict
+
             costs = {}
+            claim_aliases = {}
+            bid_aliases = {}
+            item_meta = {}
+
+            claim_index = 1
+            bid_index = 1
+
             for item in items:
-                costs[item["name"]] = {
+                name = item["name"]
+                rule = item["rule"]
+                normalized_aliases = [str(alias).strip().lower() for alias in item.get("aliases", []) if str(alias).strip()]
+
+                costs[name] = {
                     "cost": item["cost"],
-                    "rule": item["rule"]
+                    "rule": rule
                 }
-            
-            # Build loot_aliases dict
-            aliases = {}
-            for item in items:
-                aliases[item["code"]] = item["name"]
-                for alias in item.get("aliases", []):
-                    aliases[alias] = item["name"]
-            
-            return costs, aliases
+
+                is_bidding = str(rule).startswith("Bidding")
+                scoped_code = str(bid_index if is_bidding else claim_index)
+
+                item_meta[name] = {
+                    "source_code": str(item["code"]),
+                    "scoped_code": scoped_code,
+                    "aliases": normalized_aliases,
+                    "is_bidding": is_bidding,
+                }
+
+                target_aliases = bid_aliases if is_bidding else claim_aliases
+                target_aliases[scoped_code] = name
+                for alias in normalized_aliases:
+                    target_aliases[alias] = name
+
+                if is_bidding:
+                    bid_index += 1
+                else:
+                    claim_index += 1
+
+            return costs, claim_aliases, bid_aliases, item_meta
     except FileNotFoundError:
         print("❌ loot_items.json not found. Using fallback defaults.")
-        return {}, {}
+        return {}, {}, {}, {}
 
-loot_costs, loot_aliases = load_loot_items()
+loot_costs, claim_aliases, bid_aliases, loot_meta = load_loot_items()
 
 
 def reload_loot_items():
-    global loot_costs, loot_aliases
-    new_costs, new_aliases = load_loot_items()
+    global loot_costs, claim_aliases, bid_aliases, loot_meta
+    new_costs, new_claim_aliases, new_bid_aliases, new_meta = load_loot_items()
     loot_costs.clear()
     loot_costs.update(new_costs)
-    loot_aliases.clear()
-    loot_aliases.update(new_aliases)
-    return loot_costs, loot_aliases
+    claim_aliases.clear()
+    claim_aliases.update(new_claim_aliases)
+    bid_aliases.clear()
+    bid_aliases.update(new_bid_aliases)
+    loot_meta.clear()
+    loot_meta.update(new_meta)
+    return loot_costs, claim_aliases, bid_aliases, loot_meta
 
 CHANNEL_ID = 1485956297227763752  # 🔧 CHANGE THIS
 
@@ -114,85 +141,6 @@ async def check_claims(bot):
 # =========================
 def setup(bot):
 
-    # ===== CLAIM =====
-    @bot.tree.command(name="claim", description="Claim a loot item")
-    async def claim_cmd(interaction: discord.Interaction, code: str):
-        if code not in loot_aliases:
-            await interaction.response.send_message("❌ Invalid code.")
-            return
-
-        item = loot_aliases[code]
-        user_id = interaction.user.id
-        rule = loot_costs[item]["rule"]
-        cost = loot_costs[item]["cost"]
-
-        if rule.startswith("Bidding"):
-            await interaction.response.send_message(f"❌ Use /bid for {item}.")
-            return
-
-        if not can_spend(user_id, cost, item):
-            await interaction.response.send_message(f"❌ Not enough points.")
-            return
-
-        now = datetime.datetime.now()
-
-        if item not in claims:
-            claims[item] = {"players": [], "timestamp": now}
-
-        if user_id not in claims[item]["players"]:
-            claims[item]["players"].append(user_id)
-
-        log_event("claim", user_id, item, cost)
-
-        remaining = remaining_claims(user_id, item)
-        msg = f"{interaction.user.display_name} claimed {item}!"
-        if remaining is not None:
-            msg += f"\n➡️ Remaining this week: {remaining}"
-
-        await interaction.response.send_message(msg)
-
-    # ===== BID =====
-    @bot.tree.command(name="bid", description="Place a bid on an item")
-    async def bid_cmd(interaction: discord.Interaction, code: str, amount: int):
-        if code not in loot_aliases:
-            await interaction.response.send_message("❌ Invalid code.")
-            return
-
-        item = loot_aliases[code]
-        user_id = interaction.user.id
-        rule = loot_costs[item]["rule"]
-
-        if not rule.startswith("Bidding"):
-            await interaction.response.send_message("❌ Not a bidding item.")
-            return
-
-        # Minimum bid is always 10 points
-        if amount < 10:
-            await interaction.response.send_message(f"❌ Minimum bid is 10 points.")
-            return
-
-        if not can_spend(user_id, amount, item):
-            await interaction.response.send_message("❌ Not enough points.")
-            return
-
-        now = datetime.datetime.now()
-
-        if item not in bids:
-            bids[item] = {"players": {}, "timestamp": now}
-
-        current_bid = bids[item]["players"].get(user_id, 0)
-        if amount <= current_bid:
-            await interaction.response.send_message(
-                f"❌ Must bid higher than {current_bid}."
-            )
-            return
-
-        bids[item]["players"][user_id] = amount
-        log_event("bid", user_id, item, amount)
-
-        await interaction.response.send_message(
-            f"{interaction.user.display_name} bid {amount} on {item}!"
-        )
 
     # ===== VIEW CLAIMS LEADERBOARD =====
     @bot.tree.command(name="claimsleaderboard", description="View active item claims")
@@ -268,9 +216,13 @@ def setup(bot):
 
         # Find the item
         target_item = None
-        for alias, item_name in loot_aliases.items():
-            if item.lower() == item_name.lower() or item.lower() == alias.lower():
-                target_item = item_name
+        item_lookup = item.lower()
+        for alias_map in (bid_aliases, claim_aliases):
+            for alias, item_name in alias_map.items():
+                if item_lookup == item_name.lower() or item_lookup == alias.lower():
+                    target_item = item_name
+                    break
+            if target_item:
                 break
 
         if not target_item or target_item not in bids:
@@ -328,9 +280,13 @@ def setup(bot):
 
         # Find the item (by name or code)
         target_item = None
-        for alias, item_name in loot_aliases.items():
-            if item.lower() == item_name.lower() or item.lower() == alias.lower():
-                target_item = item_name
+        item_lookup = item.lower()
+        for alias_map in (claim_aliases, bid_aliases):
+            for alias, item_name in alias_map.items():
+                if item_lookup == item_name.lower() or item_lookup == alias.lower():
+                    target_item = item_name
+                    break
+            if target_item:
                 break
 
         if not target_item or target_item not in claims:
@@ -402,11 +358,12 @@ def setup(bot):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        if code not in loot_aliases:
+        lookup = str(code).strip().lower()
+        item = claim_aliases.get(lookup) or bid_aliases.get(lookup)
+        if not item:
             await interaction.response.send_message("❌ Invalid code.", ephemeral=True)
             return
 
-        item = loot_aliases[code]
         base_cost = loot_costs[item]["cost"]
         final_cost = cost if cost is not None else base_cost
 

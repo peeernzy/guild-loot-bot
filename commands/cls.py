@@ -14,9 +14,9 @@ def setup(bot):
             )
             return
 
-        if not isinstance(interaction.channel, discord.TextChannel):
+        if interaction.guild is None or interaction.channel is None:
             await interaction.response.send_message(
-                "❌ This command can only be used in a text channel.",
+                "❌ This command can only be used inside a server text channel.",
                 ephemeral=True
             )
             return

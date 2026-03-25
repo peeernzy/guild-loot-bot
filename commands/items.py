@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from .loot import loot_aliases, loot_costs
+from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
 from .utils import remaining_claims
 
 def setup(bot):
@@ -31,8 +31,14 @@ def setup(bot):
         claim_items = []
         bid_items = []
 
-        for code, name in loot_aliases.items():
-            if code.isdigit():
+        seen_items = set()
+
+        for alias_map, is_bidding in ((claim_aliases, False), (bid_aliases, True)):
+            for code, name in alias_map.items():
+                if not code.isdigit() or name in seen_items:
+                    continue
+
+                seen_items.add(name)
                 cost = loot_costs.get(name, {"cost": 0, "rule": "No rule"})
                 rule = cost.get("rule", "No rule")
                 emoji = emoji_map.get(name, "❔")
@@ -41,9 +47,10 @@ def setup(bot):
                 remaining = remaining_claims(user_id, name)
                 extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
 
-                field_value = f"**Code:** `{code}`\n**Cost:** {points} pts\n**Rule:** {rule}{extra}"
+                source_code = loot_meta.get(name, {}).get("source_code", code)
+                field_value = f"**Code:** `{code}`\n**Item ID:** `{source_code}`\n**Cost:** {points} pts\n**Rule:** {rule}{extra}"
 
-                if "Bidding" in rule:
+                if is_bidding:
                     bid_items.append((emoji, code, name, field_value, points))
                 else:
                     claim_items.append((emoji, code, name, field_value, points))
@@ -83,7 +90,8 @@ def setup(bot):
         )
 
         # Aliases section
-        aliases = ", ".join([f"`{alias}`" for alias in loot_aliases.keys() if not alias.isdigit()])
+        alias_names = sorted({alias for alias in list(claim_aliases.keys()) + list(bid_aliases.keys()) if not alias.isdigit()})
+        aliases = ", ".join([f"`{alias}`" for alias in alias_names])
         embed.add_field(
             name="🔑 ALIASES",
             value=f"Shortcuts: {aliases}",
