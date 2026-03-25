@@ -1,4 +1,4 @@
-import discord, random, asyncio, datetime, json
+import discord, asyncio, datetime, json
 from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
 from .logger import log_event
 
@@ -183,6 +183,112 @@ def setup(bot):
         await interaction.response.send_message(
             f"{interaction.user.display_name} bid {amount} on {item}!"
         )
+
+    # ===== VIEW CLAIMS LEADERBOARD =====
+    @bot.tree.command(name="claimsleaderboard", description="View all current item claims")
+    async def claims_leaderboard_cmd(interaction: discord.Interaction):
+        if not claims:
+            await interaction.response.send_message("📋 No active claims.")
+            return
+
+        embed = discord.Embed(
+            title="📋 Current Claims",
+            description="Items waiting for manual distribution",
+            color=discord.Color.blue()
+        )
+
+        for item, data in sorted(claims.items()):
+            player_list = []
+            for player_id in data["players"]:
+                member = interaction.guild.get_member(player_id)
+                if member:
+                    player_list.append(f"• {member.display_name}")
+            
+            if player_list:
+                cost = loot_costs.get(item, {}).get("cost", 0)
+                embed.add_field(
+                    name=f"{item} ({cost} pts)",
+                    value="\n".join(player_list),
+                    inline=False
+                )
+
+        await interaction.response.send_message(embed=embed)
+
+    # ===== AWARD (MANUAL DISTRIBUTION) =====
+    @bot.tree.command(name="award", description="Moderator-only: Manually award item to a claimer")
+    async def award_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
+        if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
+            await interaction.response.send_message("❌ No permission.", ephemeral=True)
+            return
+
+        # Find the item (by name or code)
+        target_item = None
+        for alias, item_name in loot_aliases.items():
+            if item.lower() == item_name.lower() or item.lower() == alias.lower():
+                target_item = item_name
+                break
+
+        if not target_item or target_item not in claims:
+            await interaction.response.send_message(
+                f"❌ Item '{item}' not found in active claims.\nUse `/claimsleaderboard` to see options.",
+                ephemeral=True
+            )
+            return
+
+        # Check if member claimed this item
+        if member.id not in claims[target_item]["players"]:
+            await interaction.response.send_message(
+                f"❌ {member.display_name} did not claim {target_item}.",
+                ephemeral=True
+            )
+            return
+
+        # Award the item
+        cost = loot_costs.get(target_item, {"cost": 0})["cost"]
+
+        if not can_spend(member.id, cost, target_item):
+            await interaction.response.send_message(
+                f"❌ {member.display_name} cannot afford {target_item}.",
+                ephemeral=True
+            )
+            return
+
+        spend_points(member.id, cost, target_item)
+        leaderboard[member.id] = leaderboard.get(member.id, 0) + 1
+        log_event("award", member.id, target_item, cost)
+
+        # Remove from claims
+        claims[target_item]["players"].remove(member.id)
+        if not claims[target_item]["players"]:
+            del claims[target_item]
+
+        await interaction.response.send_message(
+            f"✅ {member.display_name} awarded **{target_item}** (-{cost} pts)"
+        )
+
+    # ===== CLEAR EXPIRED CLAIMS =====
+    @bot.tree.command(name="clearclaims", description="Moderator-only: Clear expired claims (older than 7 days)")
+    async def clear_claims_cmd(interaction: discord.Interaction):
+        if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
+            await interaction.response.send_message("❌ No permission.", ephemeral=True)
+            return
+
+        now = datetime.datetime.now()
+        cleared = []
+
+        for item, data in list(claims.items()):
+            age_days = (now - data["timestamp"]).total_seconds() / 86400
+            if age_days > 7:
+                cleared.append(f"{item} ({int(age_days)} days old)")
+                del claims[item]
+
+        if cleared:
+            await interaction.response.send_message(
+                f"✅ Cleared {len(cleared)} expired claims:\n" + "\n".join(cleared),
+                ephemeral=True
+            )
+        else:
+            await interaction.response.send_message("✅ No expired claims to clear.", ephemeral=True)
 
     # ===== GRANT =====
     @bot.tree.command(name="grant", description="Grant loot")
