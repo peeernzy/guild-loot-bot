@@ -36,12 +36,12 @@ def setup(bot):
                 cost = loot_costs.get(name, {"cost": 0, "rule": "No rule"})
                 rule = cost.get("rule", "No rule")
                 emoji = emoji_map.get(name, "❔")
-                points = cost['cost']
+                points = cost["cost"]
 
                 remaining = remaining_claims(user_id, name)
                 extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
 
-                field_value = f"**Cost:** {points} pts\n**Rule:** {rule}{extra}"
+                field_value = f"**Code:** `{code}`\n**Cost:** {points} pts\n**Rule:** {rule}{extra}"
 
                 if "Bidding" in rule:
                     bid_items.append((emoji, code, name, field_value, points))
@@ -55,9 +55,9 @@ def setup(bot):
                 value="Fixed price • Use `/claim [code]`",
                 inline=False
             )
-            for emoji, code, name, field_value, points in sorted(claim_items, key=lambda x: x[4]):
+            for index, (emoji, code, name, field_value, points) in enumerate(sorted(claim_items, key=lambda x: x[4]), start=1):
                 embed.add_field(
-                    name=f"{emoji} [{code}] {name}",
+                    name=f"{emoji} [{index}] {name}",
                     value=field_value,
                     inline=True
                 )
@@ -69,9 +69,9 @@ def setup(bot):
                 value="Highest bid wins • Use `/bid [code] [amount]`",
                 inline=False
             )
-            for emoji, code, name, field_value, points in sorted(bid_items, key=lambda x: x[4], reverse=True):
+            for index, (emoji, code, name, field_value, points) in enumerate(sorted(bid_items, key=lambda x: x[4], reverse=True), start=1):
                 embed.add_field(
-                    name=f"{emoji} [{code}] {name}",
+                    name=f"{emoji} [{index}] {name}",
                     value=field_value,
                     inline=True
                 )
