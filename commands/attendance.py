@@ -33,10 +33,37 @@ def setup(bot):
         updates = []
         for row in reader:
             member_id = int(row["member_id"])
-            event = row["event"].strip().lower()
-            outcome = row["outcome"].strip().lower()
+            raw_event = row["event"].strip().lower()
+            raw_outcome = row["outcome"].strip().lower()
 
-            # Look up points from config
+            # Support short numeric input for convenience:
+            # event: 1 -> clansanctuary, 2 -> sindrisisland
+            # outcome: 1 -> win/participated, 0 -> lose/absent
+            event_alias = {
+                "1": "clansanctuary",
+                "2": "sindrisisland",
+                "clansanctuary": "clansanctuary",
+                "sindrisisland": "sindrisisland"
+            }
+            outcome_alias = {
+                "1": "win",          # default win for numbers
+                "0": "lose",         # default lose/absent for numbers
+                "win": "win",
+                "lose": "lose",
+                "participated": "participated",
+                "absent": "absent"
+            }
+
+            event = event_alias.get(raw_event, raw_event)
+            outcome = outcome_alias.get(raw_outcome, raw_outcome)
+
+            # if user provided numeric 0/1 for clan sanctuary outcome, map absent/participated
+            if raw_event == "1" and raw_outcome == "1":
+                outcome = "participated"
+            if raw_event == "1" and raw_outcome == "0":
+                outcome = "absent"
+
+            # Lookup points from config
             points = EVENT_RULES.get(event, {}).get(outcome, 0)
 
             member = interaction.guild.get_member(member_id)
