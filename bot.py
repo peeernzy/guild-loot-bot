@@ -35,6 +35,8 @@ cls.setup(bot)            # Channel cleanup command
 item_import.setup(bot)    # CSV loot item import command
 item_export.setup(bot)    # CSV loot item export command
 
+print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export")
+
 # =========================
 # EVENTS
 # =========================
