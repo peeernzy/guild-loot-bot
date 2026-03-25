@@ -41,6 +41,7 @@ def get_postgres_connection():
 
 def initialize_database():
     if using_postgres():
+        print("[POINTS] Using PostgreSQL storage.")
         with get_postgres_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -52,7 +53,9 @@ def initialize_database():
                     """
                 )
             conn.commit()
+        print("[POINTS] PostgreSQL points table is ready.")
     else:
+        print(f"[POINTS] Using SQLite fallback storage at {SQLITE_DB_FILE}.")
         with get_sqlite_connection() as conn:
             conn.execute(
                 """
@@ -121,8 +124,12 @@ def migrate_legacy_points():
         break
 
 
-initialize_database()
-migrate_legacy_points()
+try:
+    initialize_database()
+    migrate_legacy_points()
+except Exception as exc:
+    print(f"[POINTS] Database initialization failed: {exc}")
+    raise
 
 
 def get_all_points() -> dict[str, int]:
