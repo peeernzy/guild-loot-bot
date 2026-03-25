@@ -121,7 +121,10 @@ async def check_claims(bot):
         for item, bid_data in list(bids.items()):
             if (now - bid_data["timestamp"]).total_seconds() >= 86400:
                 if bid_data["players"]:
-                    winner_id = max(bid_data["players"], key=bid_data["players"].get)
+                    top_bid = max(bid_data["players"].values())
+                    top_bidders = [pid for pid, amt in bid_data["players"].items() if amt == top_bid]
+                    winner_id = random.choice(top_bidders)
+
                     winning_bid = bid_data["players"][winner_id]
 
                     guild = channel.guild
