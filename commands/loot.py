@@ -35,6 +35,16 @@ def load_loot_items():
 
 loot_costs, loot_aliases = load_loot_items()
 
+
+def reload_loot_items():
+    global loot_costs, loot_aliases
+    new_costs, new_aliases = load_loot_items()
+    loot_costs.clear()
+    loot_costs.update(new_costs)
+    loot_aliases.clear()
+    loot_aliases.update(new_aliases)
+    return loot_costs, loot_aliases
+
 CHANNEL_ID = 1485956297227763752  # 🔧 CHANGE THIS
 
 # =========================
