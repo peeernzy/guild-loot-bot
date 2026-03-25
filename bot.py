@@ -44,6 +44,8 @@ print("📦 Loaded command modules: points, loot, leaderboard, items, summary, r
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     try:
+        registered = [cmd.name for cmd in bot.tree.get_commands()]
+        print(f"🧾 Registered commands before sync ({len(registered)}): {registered}")
         synced = await bot.tree.sync()
         print(f"📌 Synced {len(synced)} slash commands")
     except Exception as e:

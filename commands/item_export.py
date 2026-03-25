@@ -21,7 +21,7 @@ def _build_csv_rows(items: list[dict]) -> str:
 
 
 def setup(bot):
-    @bot.tree.command(name="exportitems", description="Export the current loot items as a CSV file")
+    @bot.tree.command(name="expitems", description="Export loot items to a CSV file")
     async def export_items_cmd(interaction: discord.Interaction):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)

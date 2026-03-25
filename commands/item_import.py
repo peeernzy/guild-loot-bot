@@ -121,7 +121,7 @@ def _save_loot_items(items: list[dict]):
 
 
 def setup(bot):
-    @bot.tree.command(name="importitems", description="Import and replace loot items from a CSV file")
+    @bot.tree.command(name="impitems", description="Import loot items from a CSV file")
     async def import_items_cmd(interaction: discord.Interaction, file: discord.Attachment):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
