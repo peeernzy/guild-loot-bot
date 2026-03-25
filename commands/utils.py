@@ -61,9 +61,9 @@ def can_spend(member_id: int, amount: int, item: str = None) -> bool:
 def spend_points(member_id: int, amount: int, item: str = None):
     current_week = _current_week()
 
-    # ✅ DEDUCT REAL POINTS (and save to persistent storage)
+    # ✅ DEDUCT REAL POINTS (and return updated balance)
     from .points import deduct_points
-    deduct_points(member_id, amount)
+    new_balance = deduct_points(member_id, amount)
 
     # Weekly total record
     record = weekly_spent.get(member_id, {"week": current_week, "spent": 0})
@@ -79,6 +79,8 @@ def spend_points(member_id: int, amount: int, item: str = None):
     if item:
         item_record["items"][item] = item_record["items"].get(item, 0) + 1
     weekly_item_claims[member_id] = item_record
+
+    return new_balance
 
 # =========================
 # ADD POINTS (REWARD)
