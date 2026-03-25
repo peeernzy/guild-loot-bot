@@ -249,9 +249,9 @@ def setup(bot):
 
         await interaction.response.send_message(embed=embed)
 
-    # ===== SELECT BID WINNER (ADMIN OVERRIDE) =====
-    @bot.tree.command(name="selectbidwinner", description="Moderator-only: Manually select bid winner (bypass 24h cooldown)")
-    async def select_bid_winner_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
+    # ===== END BIDDING (AUTO-SELECT HIGHEST BIDDER) =====
+    @bot.tree.command(name="endbidding", description="Moderator-only: End bidding and announce winner (auto-select highest bidder)")
+    async def end_bidding_cmd(interaction: discord.Interaction, item: str):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
@@ -270,33 +270,43 @@ def setup(bot):
             )
             return
 
-        # Check if member is bidding on this item
-        if member.id not in bids[target_item]["players"]:
+        # Get highest bidder
+        if not bids[target_item]["players"]:
             await interaction.response.send_message(
-                f"❌ {member.display_name} did not bid on {target_item}.",
+                f"❌ No bids on {target_item}.",
                 ephemeral=True
             )
             return
+
+        winner_id = max(bids[target_item]["players"], key=bids[target_item]["players"].get)
+        winning_bid = bids[target_item]["players"][winner_id]
+        winner = interaction.guild.get_member(winner_id)
 
         # Award the bid
-        winning_bid = bids[target_item]["players"][member.id]
-
-        if not can_spend(member.id, winning_bid, target_item):
+        if not can_spend(winner_id, winning_bid, target_item):
             await interaction.response.send_message(
-                f"❌ {member.display_name} cannot afford their bid ({winning_bid} pts).",
+                f"❌ {winner.display_name} cannot afford their bid ({winning_bid} pts).",
                 ephemeral=True
             )
             return
 
-        spend_points(member.id, winning_bid, target_item)
-        leaderboard[member.id] = leaderboard.get(member.id, 0) + 1
-        log_event("win", member.id, target_item, winning_bid)
+        spend_points(winner_id, winning_bid, target_item)
+        leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
+        log_event("win", winner_id, target_item, winning_bid)
 
         # Remove from bids
         del bids[target_item]
 
+        # Announce to channel
+        channel = interaction.guild.get_channel(CHANNEL_ID)
+        if channel:
+            await channel.send(
+                f"🎉 **Bidding Ended!**\n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
+            )
+
         await interaction.response.send_message(
-            f"✅ {member.display_name} won **{target_item}** with bid of {winning_bid} pts!"
+            f"✅ Bidding ended. {winner.display_name} won {target_item}!",
+            ephemeral=True
         )
 
     # ===== AWARD (MANUAL DISTRIBUTION) =====
