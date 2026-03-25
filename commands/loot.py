@@ -150,15 +150,15 @@ def setup(bot):
 
         item = loot_aliases[code]
         user_id = interaction.user.id
-        min_cost = loot_costs[item]["cost"]
         rule = loot_costs[item]["rule"]
 
         if not rule.startswith("Bidding"):
             await interaction.response.send_message("❌ Not a bidding item.")
             return
 
-        if amount < min_cost:
-            await interaction.response.send_message(f"❌ Min bid is {min_cost}.")
+        # Minimum bid is always 10 points
+        if amount < 10:
+            await interaction.response.send_message(f"❌ Minimum bid is 10 points.")
             return
 
         if not can_spend(user_id, amount, item):
@@ -213,6 +213,91 @@ def setup(bot):
                 )
 
         await interaction.response.send_message(embed=embed)
+
+    # ===== VIEW BIDS LEADERBOARD =====
+    @bot.tree.command(name="bidsleaderboard", description="View all current bids")
+    async def bids_leaderboard_cmd(interaction: discord.Interaction):
+        if not bids:
+            await interaction.response.send_message("🏆 No active bids.")
+            return
+
+        embed = discord.Embed(
+            title="🏆 Current Bids",
+            description="Bidding items with highest bids",
+            color=discord.Color.gold()
+        )
+
+        for item, bid_data in sorted(bids.items()):
+            if bid_data["players"]:
+                # Get highest bid
+                highest_bidder_id = max(bid_data["players"], key=bid_data["players"].get)
+                highest_member = interaction.guild.get_member(highest_bidder_id)
+                highest_bid = bid_data["players"][highest_bidder_id]
+                
+                bid_list = []
+                for player_id, amount in sorted(bid_data["players"].items(), key=lambda x: x[1], reverse=True):
+                    member = interaction.guild.get_member(player_id)
+                    if member:
+                        marker = "👑" if player_id == highest_bidder_id else "  "
+                        bid_list.append(f"{marker} {member.display_name}: {amount} pts")
+                
+                embed.add_field(
+                    name=f"{item}",
+                    value="\n".join(bid_list),
+                    inline=False
+                )
+
+        await interaction.response.send_message(embed=embed)
+
+    # ===== SELECT BID WINNER (ADMIN OVERRIDE) =====
+    @bot.tree.command(name="selectbidwinner", description="Moderator-only: Manually select bid winner (bypass 24h cooldown)")
+    async def select_bid_winner_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
+        if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
+            await interaction.response.send_message("❌ No permission.", ephemeral=True)
+            return
+
+        # Find the item
+        target_item = None
+        for alias, item_name in loot_aliases.items():
+            if item.lower() == item_name.lower() or item.lower() == alias.lower():
+                target_item = item_name
+                break
+
+        if not target_item or target_item not in bids:
+            await interaction.response.send_message(
+                f"❌ Item '{item}' not found in active bids.\nUse `/bidsleaderboard` to see options.",
+                ephemeral=True
+            )
+            return
+
+        # Check if member is bidding on this item
+        if member.id not in bids[target_item]["players"]:
+            await interaction.response.send_message(
+                f"❌ {member.display_name} did not bid on {target_item}.",
+                ephemeral=True
+            )
+            return
+
+        # Award the bid
+        winning_bid = bids[target_item]["players"][member.id]
+
+        if not can_spend(member.id, winning_bid, target_item):
+            await interaction.response.send_message(
+                f"❌ {member.display_name} cannot afford their bid ({winning_bid} pts).",
+                ephemeral=True
+            )
+            return
+
+        spend_points(member.id, winning_bid, target_item)
+        leaderboard[member.id] = leaderboard.get(member.id, 0) + 1
+        log_event("win", member.id, target_item, winning_bid)
+
+        # Remove from bids
+        del bids[target_item]
+
+        await interaction.response.send_message(
+            f"✅ {member.display_name} won **{target_item}** with bid of {winning_bid} pts!"
+        )
 
     # ===== AWARD (MANUAL DISTRIBUTION) =====
     @bot.tree.command(name="award", description="Moderator-only: Manually award item to a claimer")

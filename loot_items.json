@@ -4,14 +4,14 @@
       "code": "1",
       "name": "Rare Equipment",
       "cost": 10,
-      "rule": "No limit",
+      "rule": "Bidding only, min 10 points",
       "aliases": ["equip"]
     },
     {
       "code": "2",
       "name": "Rare Weapon",
-      "cost": 5,
-      "rule": "Bidding only, uncapped",
+      "cost": 10,
+      "rule": "Bidding only, min 10 points",
       "aliases": ["weapon"]
     },
     {
@@ -39,14 +39,14 @@
       "code": "6",
       "name": "Middle Horn",
       "cost": 3,
-      "rule": "Max 1 per week",
+      "rule": "Max 2 per week",
       "aliases": ["mhorn"]
     },
     {
       "code": "7",
       "name": "Lesser Horn",
       "cost": 1,
-      "rule": "Max 3 per week",
+      "rule": "Max 2 per week",
       "aliases": ["lhorn"]
     },
     {
@@ -60,14 +60,14 @@
       "code": "9",
       "name": "Gwemix Piece Pouch",
       "cost": 10,
-      "rule": "Bidding only, uncapped",
+      "rule": "Bidding only, min 10 points",
       "aliases": ["gwemix"]
     },
     {
       "code": "10",
       "name": "Artisan",
       "cost": 10,
-      "rule": "Bidding only, uncapped",
+      "rule": "Bidding only, min 10 points",
       "aliases": ["artisan"]
     }
   ]

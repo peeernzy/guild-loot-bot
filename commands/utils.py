@@ -47,10 +47,10 @@ def can_spend(member_id: int, amount: int, item: str = None) -> bool:
     if item:
         count = item_record["items"].get(item, 0)
 
-        if item == "Middle Horn" and count >= 1:
+        if item == "Middle Horn" and count >= 2:
             return False
 
-        if item == "Lesser Horn" and count >= 3:
+        if item == "Lesser Horn" and count >= 2:
             return False
 
     return True
@@ -101,9 +101,9 @@ def remaining_claims(member_id: int, item: str) -> int:
     count = item_record["items"].get(item, 0)
 
     if item == "Middle Horn":
-        return max(0, 1 - count)
+        return max(0, 2 - count)
 
     if item == "Lesser Horn":
-        return max(0, 3 - count)
+        return max(0, 2 - count)
 
     return None
