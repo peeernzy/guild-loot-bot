@@ -19,7 +19,7 @@ def setup(bot):
 
         # Group into categories
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items"}]
-        info = [f"/{c}" for c in user_cmds if c in {"summary"}]
+        info = [f"/{c}" for c in user_cmds if c in {"summary", "xid"}]
 
         lines = []
         if gameplay:
@@ -68,3 +68,12 @@ def setup(bot):
             lines.extend(system)
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+    # Extract ID command
+    @bot.tree.command(name="xid", description="Extract and display a user's Discord ID")
+    async def extract_id(interaction: discord.Interaction, member: discord.Member = None):
+        member = member or interaction.user
+        await interaction.response.send_message(
+            f"🆔 {member.display_name}'s Discord ID: `{member.id}`",
+            ephemeral=True
+        )
