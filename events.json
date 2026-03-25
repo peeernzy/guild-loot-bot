@@ -1,10 +1,10 @@
 {
   "sindrisisland": {
-    "win": 100,
-    "lose": 50
+    "win": 20,
+    "lose": 10
   },
   "clansanctuary": {
-    "participated": 75,
+    "participated": 15,
     "absent": 0
   }
 }
