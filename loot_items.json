@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "code": "1",
+      "name": "Rare Equipment",
+      "cost": 10,
+      "rule": "No limit",
+      "aliases": ["equip"]
+    },
+    {
+      "code": "2",
+      "name": "Rare Weapon",
+      "cost": 5,
+      "rule": "Bidding only, uncapped",
+      "aliases": ["weapon"]
+    },
+    {
+      "code": "3",
+      "name": "Rare Materials",
+      "cost": 1,
+      "rule": "Max 5 per member",
+      "aliases": ["mat"]
+    },
+    {
+      "code": "4",
+      "name": "Radiant Enchantment Stone",
+      "cost": 2,
+      "rule": "Max 3 per member",
+      "aliases": ["radstone"]
+    },
+    {
+      "code": "5",
+      "name": "Darkening Enchantment Stone",
+      "cost": 2,
+      "rule": "Max 3 per member",
+      "aliases": ["darkstone"]
+    },
+    {
+      "code": "6",
+      "name": "Middle Horn",
+      "cost": 3,
+      "rule": "Max 1 per week",
+      "aliases": ["mhorn"]
+    },
+    {
+      "code": "7",
+      "name": "Lesser Horn",
+      "cost": 1,
+      "rule": "Max 3 per week",
+      "aliases": ["lhorn"]
+    },
+    {
+      "code": "8",
+      "name": "Silvarin",
+      "cost": 1,
+      "rule": "Max 5 per member",
+      "aliases": ["silv"]
+    },
+    {
+      "code": "9",
+      "name": "Gwemix Piece Pouch",
+      "cost": 10,
+      "rule": "Bidding only, uncapped",
+      "aliases": ["gwemix"]
+    },
+    {
+      "code": "10",
+      "name": "Artisan",
+      "cost": 10,
+      "rule": "Bidding only, uncapped",
+      "aliases": ["artisan"]
+    }
+  ]
+}

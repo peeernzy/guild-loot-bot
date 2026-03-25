@@ -1,4 +1,4 @@
-import discord, random, asyncio, datetime
+import discord, random, asyncio, datetime, json
 from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
 from .logger import log_event
 
@@ -6,41 +6,34 @@ claims = {}
 bids = {}
 leaderboard = {}
 
-loot_costs = {
-    "Rare Equipment": {"cost": 10, "rule": "No limit"},
-    "Rare Weapon": {"cost": 5, "rule": "Bidding only, uncapped"},
-    "Rare Materials": {"cost": 1, "rule": "Max 5 per member"},
-    "Radiant Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},
-    "Darkening Enchantment Stone": {"cost": 2, "rule": "Max 3 per member"},
-    "Middle Horn": {"cost": 3, "rule": "Max 1 per week"},
-    "Lesser Horn": {"cost": 1, "rule": "Max 3 per week"},
-    "Silvarin": {"cost": 1, "rule": "Max 5 per member"},
-    "Gwemix Piece Pouch": {"cost": 10, "rule": "Bidding only, uncapped"},
-    "Artisan": {"cost": 10, "rule": "Bidding only, uncapped"},
-}
+# Load loot items from JSON file
+def load_loot_items():
+    try:
+        with open("loot_items.json", "r") as f:
+            data = json.load(f)
+            items = data.get("items", [])
+            
+            # Build loot_costs dict
+            costs = {}
+            for item in items:
+                costs[item["name"]] = {
+                    "cost": item["cost"],
+                    "rule": item["rule"]
+                }
+            
+            # Build loot_aliases dict
+            aliases = {}
+            for item in items:
+                aliases[item["code"]] = item["name"]
+                for alias in item.get("aliases", []):
+                    aliases[alias] = item["name"]
+            
+            return costs, aliases
+    except FileNotFoundError:
+        print("❌ loot_items.json not found. Using fallback defaults.")
+        return {}, {}
 
-loot_aliases = {
-    "1": "Rare Equipment",
-    "2": "Rare Weapon",
-    "3": "Rare Materials",
-    "4": "Radiant Enchantment Stone",
-    "5": "Darkening Enchantment Stone",
-    "6": "Middle Horn",
-    "7": "Lesser Horn",
-    "8": "Silvarin",
-    "9": "Gwemix Piece Pouch",
-    "10": "Artisan",
-    "equip": "Rare Equipment",
-    "weapon": "Rare Weapon",
-    "mat": "Rare Materials",
-    "radstone": "Radiant Enchantment Stone",
-    "darkstone": "Darkening Enchantment Stone",
-    "mhorn": "Middle Horn",
-    "lhorn": "Lesser Horn",
-    "silv": "Silvarin",
-    "gwemix": "Gwemix Piece Pouch",
-    "artisan": "Artisan"
-}
+loot_costs, loot_aliases = load_loot_items()
 
 CHANNEL_ID = 1485956297227763752  # 🔧 CHANGE THIS
 
