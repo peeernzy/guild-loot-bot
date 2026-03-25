@@ -94,7 +94,3 @@ def setup(bot):
         embed.set_footer(text="Use /points to check your balance • /leaderboard for top earners")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
-            inline=False
-        )
-
-        await interaction.response.send_message(embed=embed)
