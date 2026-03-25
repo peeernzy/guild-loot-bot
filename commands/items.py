@@ -22,7 +22,12 @@ def setup(bot):
             "Lesser Horn": "🎺",
             "Silvarin": "💎",
             "Gwemix Piece Pouch": "🎒",
-            "Artisan": "⚒️"
+            "Artisan": "⚒️",
+            "Enchantment Tome Skill (White)": "📖",
+            "Enchantment Tome Skill (Green)": "📗",
+            "Enchantment Tome Skill (Rare)": "📘",
+            "Soul-Uncommon (Green)": "🟢",
+            "Soul-Rare (Blue)": "🔵"
         }
 
         user_id = interaction.user.id
