@@ -2,7 +2,7 @@ import datetime
 
 import discord
 
-from .loot import bid_aliases, bids, loot_costs
+from .loot import bid_aliases, claim_aliases, loot_meta, bids, loot_costs
 from .logger import log_event
 from .utils import can_spend
 
@@ -11,11 +11,13 @@ def setup(bot):
     @bot.tree.command(name="bid", description="Place a bid on an item")
     async def bid_cmd(interaction: discord.Interaction, code: str, amount: int):
         lookup = str(code).strip().lower()
-        if lookup not in bid_aliases:
-            await interaction.response.send_message("❌ Invalid bidding code.")
+        item = bid_aliases.get(lookup) or claim_aliases.get(lookup)
+        if not item:
+            await interaction.response.send_message("❌ Invalid bidding code. Use `/items` for list.")
             return
-
-        item = bid_aliases[lookup]
+        if not loot_meta.get(item, {}).get("is_bidding", False):
+            await interaction.response.send_message(f"❌ {item} cannot be bid on. Use `/claim {lookup}`.")
+            return
         user_id = interaction.user.id
 
         if amount < 10:

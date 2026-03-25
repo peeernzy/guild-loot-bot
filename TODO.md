@@ -1,6 +1,6 @@
 # Guild Loot Bot Fixes - TODO
 
-## Task: Fix claim alias error and hide codes/IDs in /items command
+## Task: Fix claim/bid alias errors (cross-type lookup + redirect), hide codes/IDs in /items
 
 ### Steps:
 1. [x] Update error message in `commands/claim.py` for better UX.
