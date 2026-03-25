@@ -23,6 +23,7 @@ COMMAND_DETAILS = {
     "endbid": "Close bidding and award the highest bidder.",
     "award": "Manually award an item to a selected member.",
     "clearclaims": "Remove expired loot claims.",
+    "cls": "Clear recent messages in the current channel.",
     "reset": "Reset bot tracking data when needed.",
 }
 
@@ -37,7 +38,7 @@ def setup(bot):
         # Define admin-only commands to exclude
         admin_cmds = {
             "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "endbid", "award", "clearclaims",
+            "listevents", "setevent", "endbid", "award", "clearclaims", "cls",
             "reset", "xid", "whois", "acmd"
         }
 
@@ -76,7 +77,7 @@ def setup(bot):
         # Define admin-only commands
         admin_cmds = {
             "add", "refund", "grant", "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "endbid", "award", "clearclaims",
+            "listevents", "setevent", "endbid", "award", "clearclaims", "cls",
             "reset", "xid", "whois"
         }
 
@@ -87,7 +88,7 @@ def setup(bot):
         loot_tools = [f"/{c}" for c in cmds if c in {"grant", "endbid", "award", "clearclaims"}]
         attendance = [f"/{c}" for c in cmds if c in {"getids", "exportids", "importcsv", "importattendance"}]
         events = [f"/{c}" for c in cmds if c in {"listevents", "setevent"}]
-        system = [f"/{c}" for c in cmds if c in {"reset"}]
+        system = [f"/{c}" for c in cmds if c in {"reset", "cls"}]
         member_tools = [f"/{c}" for c in cmds if c in {"xid", "whois"}]
 
         lines = ["## Admin Commands", "Administrative tools for Moderators and Elders.\n"]
