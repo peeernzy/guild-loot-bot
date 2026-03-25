@@ -44,41 +44,49 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    """Welcome new members and ask them to set their IGN nickname."""
+    """Welcome new members with a public announcement."""
     try:
+        # Find welcome channel or use first available text channel
+        welcome_channel = discord.utils.find(
+            lambda c: c.name in ["welcome", "introductions", "general"] and isinstance(c, discord.TextChannel),
+            member.guild.channels
+        )
+        
+        if not welcome_channel:
+            welcome_channel = next(
+                (c for c in member.guild.text_channels if not c.name.startswith(".")
+                ), None
+            )
+        
+        if not welcome_channel:
+            print(f"⚠️ No suitable channel found for {member.name}")
+            return
+
         embed = discord.Embed(
-            title="🎉 Welcome to the Guild!",
-            description=f"Hello {member.mention}, welcome to our community!",
+            title="🎉 New Member Joined!",
+            description=f"Welcome {member.mention} to the Guild!",
             color=discord.Color.green()
         )
         
         embed.add_field(
-            name="📝 Please Set Your Nickname",
-            value="Change your server nickname to your **In-Game Name (IGN)** so we can identify you properly.\n\n**How to:**\n1. Right-click on your name in the server\n2. Select \"Edit Server Profile\"\n3. Enter your IGN in the nickname field\n4. Click \"Save\"",
+            name="📝 Quick Setup",
+            value=f"**{member.name}**, please change your server nickname to your **In-Game Name (IGN)**:\n\n1. Right-click on your name\n2. Select \"Edit Server Profile\"\n3. Enter your IGN → Save",
             inline=False
         )
         
         embed.add_field(
             name="🎮 Get Started",
-            value="Once your nickname is set, use these commands:\n• `/ncmd` - View all available commands\n• `/items` - See loot and rewards\n• `/points` - Check your points balance",
+            value="• `/ncmd` - View all commands\n• `/items` - See rewards\n• `/points` - Check your balance",
             inline=False
         )
         
-        embed.add_field(
-            name="❓ Need Help?",
-            value="Ask any moderator or Elder if you have questions!",
-            inline=False
-        )
-        
-        embed.set_thumbnail(url=member.guild.icon.url if member.guild.icon else "")
+        embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
         embed.set_footer(text="Welcome to the adventure!")
         
-        await member.send(embed=embed)
-        print(f"✅ Welcome message sent to {member.name}")
-    except discord.Forbidden:
-        print(f"⚠️ Could not send DM to {member.name} (DMs disabled)")
+        await welcome_channel.send(embed=embed)
+        print(f"✅ Welcome message posted for {member.name} in #{welcome_channel.name}")
     except Exception as e:
-        print(f"❌ Error sending welcome message: {e}")
+        print(f"❌ Error posting welcome message: {e}")
 
 # =========================
 # RUN BOT
