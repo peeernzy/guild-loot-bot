@@ -1,5 +1,21 @@
 import discord
 
+COMMAND_DETAILS = {
+    "points": "View your current loot points balance.",
+    "leaderboard": "See the current guild rankings by points.",
+    "items": "Browse the available loot items and rewards.",
+    "summary": "Check the latest event and loot summary.",
+    "xid": "Display your Discord ID or another member's ID.",
+    "whois": "Look up a member using their Discord ID.",
+    "getids": "Generate the member ID list for attendance tracking.",
+    "exportids": "Export saved member IDs for record keeping.",
+    "importcsv": "Import attendance data from a CSV file.",
+    "importattendance": "Upload and process attendance records.",
+    "listevents": "View the list of configured guild events.",
+    "setevent": "Create or update the active event setup.",
+    "reset": "Reset bot tracking data when needed.",
+}
+
 def setup(bot):
 
     # Normal user commands (dynamic + categories)
@@ -21,13 +37,16 @@ def setup(bot):
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items"}]
         info = [f"/{c}" for c in user_cmds if c in {"summary", "xid", "whois"}]
 
-        lines = []
+        lines = ["## Normal User Commands", "Clean access to your everyday guild tools.\n"]
+
         if gameplay:
             lines.append("🎮 **Gameplay Commands**")
-            lines.extend(gameplay)
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in gameplay)
+
         if info:
-            lines.append("\n📊 **Information Commands**")
-            lines.extend(info)
+            lines.append("")
+            lines.append("📊 **Information Commands**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in info)
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
@@ -56,16 +75,21 @@ def setup(bot):
         events = [f"/{c}" for c in cmds if c in {"listevents", "setevent"}]
         system = [f"/{c}" for c in cmds if c in {"reset"}]
 
-        lines = []
+        lines = ["## Admin Commands", "Administrative tools for Moderators and Elders.\n"]
+
         if attendance:
             lines.append("📝 **Attendance Tools**")
-            lines.extend(attendance)
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in attendance)
+
         if events:
-            lines.append("\n📌 **Event Management**")
-            lines.extend(events)
+            lines.append("")
+            lines.append("📌 **Event Management**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in events)
+
         if system:
-            lines.append("\n⚙️ **System Tools**")
-            lines.extend(system)
+            lines.append("")
+            lines.append("⚙️ **System Tools**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in system)
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
