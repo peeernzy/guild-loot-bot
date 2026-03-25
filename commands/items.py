@@ -7,8 +7,8 @@ def setup(bot):
     @bot.tree.command(name="items", description="Show loot codes and aliases")
     async def items_cmd(interaction: discord.Interaction):
         embed = discord.Embed(
-            title="📜 Loot Codes & Aliases",
-            description="Use `/claim` for fixed-cost items and `/bid` for bidding items",
+            title="🎁 Loot Shop",
+            description="Earn points from Sindris Island and Clan Sanctuary, then claim your rewards!",
             color=discord.Color.gold()
         )
 
@@ -36,48 +36,64 @@ def setup(bot):
                 cost = loot_costs.get(name, {"cost": 0, "rule": "No rule"})
                 rule = cost.get("rule", "No rule")
                 emoji = emoji_map.get(name, "❔")
+                points = cost['cost']
 
                 remaining = remaining_claims(user_id, name)
-                extra = f"\nRemaining: {remaining}" if remaining is not None else ""
+                extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
 
-                field_value = f"Cost: {cost['cost']} pts\nRule: {rule}{extra}"
+                field_value = f"**Cost:** {points} pts\n**Rule:** {rule}{extra}"
 
-                if rule.startswith("Bidding"):
-                    bid_items.append((emoji, code, name, field_value))
+                if "Bidding" in rule:
+                    bid_items.append((emoji, code, name, field_value, points))
                 else:
-                    claim_items.append((emoji, code, name, field_value))
+                    claim_items.append((emoji, code, name, field_value, points))
 
         # Add claim items section
-        embed.add_field(
-            name="✅ Claim Items",
-            value="Use `/claim` for these",
-            inline=False
-        )
-        for emoji, code, name, field_value in claim_items:
+        if claim_items:
             embed.add_field(
-                name=f"{emoji} {code} → {name}",
-                value=field_value,
+                name="✅ CLAIM ITEMS",
+                value="Fixed price • Use `/claim [code]`",
                 inline=False
             )
+            for emoji, code, name, field_value in sorted(claim_items, key=lambda x: x[4]):
+                embed.add_field(
+                    name=f"{emoji} [{code}] {name}",
+                    value=field_value,
+                    inline=True
+                )
 
         # Add bidding items section
-        embed.add_field(
-            name="⚔️ Bidding Items",
-            value="Use `/bid` for these",
-            inline=False
-        )
-        for emoji, code, name, field_value in bid_items:
+        if bid_items:
             embed.add_field(
-                name=f"{emoji} {code} → {name}",
-                value=field_value,
+                name="⚔️ BIDDING ITEMS",
+                value="Highest bid wins • Use `/bid [code] [amount]`",
                 inline=False
             )
+            for emoji, code, name, field_value in sorted(bid_items, key=lambda x: x[4], reverse=True):
+                embed.add_field(
+                    name=f"{emoji} [{code}] {name}",
+                    value=field_value,
+                    inline=True
+                )
+
+        # Add quick reference
+        embed.add_field(
+            name="🎯 QUICK REFERENCE",
+            value="**Earn Points:**\n🟢 Sindris Win: +20\n🟡 Sindris Lose: +10\n🔵 Clan Participated: +15",
+            inline=False
+        )
 
         # Aliases section
-        aliases = ", ".join([alias for alias in loot_aliases.keys() if not alias.isdigit()])
+        aliases = ", ".join([f"`{alias}`" for alias in loot_aliases.keys() if not alias.isdigit()])
         embed.add_field(
-            name="🔑 Aliases",
-            value=f"You can also use: {aliases}",
+            name="🔑 ALIASES",
+            value=f"Shortcuts: {aliases}",
+            inline=False
+        )
+
+        embed.set_footer(text="Use /points to check your balance • /leaderboard for top earners")
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
             inline=False
         )
 
