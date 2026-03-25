@@ -55,7 +55,7 @@ def setup(bot):
                 value="Fixed price • Use `/claim [code]`",
                 inline=False
             )
-            for emoji, code, name, field_value in sorted(claim_items, key=lambda x: x[4]):
+            for emoji, code, name, field_value, points in sorted(claim_items, key=lambda x: x[4]):
                 embed.add_field(
                     name=f"{emoji} [{code}] {name}",
                     value=field_value,
@@ -69,13 +69,12 @@ def setup(bot):
                 value="Highest bid wins • Use `/bid [code] [amount]`",
                 inline=False
             )
-            for emoji, code, name, field_value in sorted(bid_items, key=lambda x: x[4], reverse=True):
+            for emoji, code, name, field_value, points in sorted(bid_items, key=lambda x: x[4], reverse=True):
                 embed.add_field(
                     name=f"{emoji} [{code}] {name}",
                     value=field_value,
                     inline=True
                 )
-
         # Add quick reference
         embed.add_field(
             name="🎯 QUICK REFERENCE",
