@@ -27,7 +27,7 @@ def setup(bot):
         # Define admin-only commands to exclude
         admin_cmds = {
             "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "reset", "acmd"
+            "listevents", "setevent", "reset", "xid", "whois", "acmd"
         }
 
         # Filter out admin commands
@@ -35,7 +35,7 @@ def setup(bot):
 
         # Group into categories
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items"}]
-        info = [f"/{c}" for c in user_cmds if c in {"summary", "xid", "whois"}]
+        info = [f"/{c}" for c in user_cmds if c in {"summary"}]
 
         lines = ["## Normal User Commands", "Clean access to your everyday guild tools.\n"]
 
@@ -65,7 +65,7 @@ def setup(bot):
         # Define admin-only commands
         admin_cmds = {
             "getids", "exportids", "importcsv", "importattendance",
-            "listevents", "setevent", "reset"
+            "listevents", "setevent", "reset", "xid", "whois"
         }
 
         cmds = [c for c in all_cmds if c in admin_cmds]
@@ -74,6 +74,7 @@ def setup(bot):
         attendance = [f"/{c}" for c in cmds if c in {"getids", "exportids", "importcsv", "importattendance"}]
         events = [f"/{c}" for c in cmds if c in {"listevents", "setevent"}]
         system = [f"/{c}" for c in cmds if c in {"reset"}]
+        member_tools = [f"/{c}" for c in cmds if c in {"xid", "whois"}]
 
         lines = ["## Admin Commands", "Administrative tools for Moderators and Elders.\n"]
 
@@ -85,6 +86,11 @@ def setup(bot):
             lines.append("")
             lines.append("📌 **Event Management**")
             lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in events)
+
+        if member_tools:
+            lines.append("")
+            lines.append("👤 **Member Tools**")
+            lines.extend(f"• {cmd} — {COMMAND_DETAILS.get(cmd[1:], 'No description available.')}" for cmd in member_tools)
 
         if system:
             lines.append("")

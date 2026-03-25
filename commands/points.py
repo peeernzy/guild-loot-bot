@@ -1,8 +1,13 @@
 import discord
 import json
 import os
+from pathlib import Path
 
-POINTS_FILE = "points_data.json"
+DATA_DIR = Path(os.getenv("BOT_DATA_DIR", "data"))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+POINTS_FILE = DATA_DIR / "points_data.json"
+LEGACY_POINTS_FILE = Path("points_data.json")
 
 # =========================
 # STORAGE
@@ -15,8 +20,14 @@ points = {}
 def load_points():
     """Load points from JSON file at bot startup."""
     global points
-    if os.path.exists(POINTS_FILE):
-        with open(POINTS_FILE, "r") as f:
+
+    source_file = POINTS_FILE
+
+    if not POINTS_FILE.exists() and LEGACY_POINTS_FILE.exists():
+        source_file = LEGACY_POINTS_FILE
+
+    if source_file.exists():
+        with open(source_file, "r") as f:
             points = json.load(f)
     else:
         points = {}
