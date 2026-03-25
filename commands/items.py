@@ -48,7 +48,7 @@ def setup(bot):
                 extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
 
                 source_code = loot_meta.get(name, {}).get("source_code", code)
-                field_value = f"**Code:** `{code}`\n**Item ID:** `{source_code}`\n**Cost:** {points} pts\n**Rule:** {rule}{extra}"
+                field_value = f"**Cost:** {points} pts\n**Rule:** {rule}{extra}"
 
                 if is_bidding:
                     bid_items.append((emoji, code, name, field_value, points))

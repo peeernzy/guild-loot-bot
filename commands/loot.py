@@ -1,4 +1,4 @@
-import discord, asyncio, datetime, json
+import discord, asyncio, datetime, json, random
 from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
 from .logger import log_event
 
@@ -91,7 +91,7 @@ async def check_claims(bot):
         for item, data in list(claims.items()):
             if (now - data["timestamp"]).total_seconds() >= 86400:
                 if data["players"]:
-                    winner_id = random.choice(data["players"])
+                    winner_id = random.choice(list(data["players"]))
                     guild = channel.guild
                     winner = await guild.fetch_member(winner_id)
                     cost = loot_costs.get(item, {"cost": 0})["cost"]

@@ -12,7 +12,7 @@ def setup(bot):
     async def claim_cmd(interaction: discord.Interaction, code: str):
         lookup = str(code).strip().lower()
         if lookup not in claim_aliases:
-            await interaction.response.send_message("❌ Invalid claim code.")
+            await interaction.response.send_message("❌ Invalid claim code. Use `/items` for list.")
             return
 
         item = claim_aliases[lookup]
