@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # IMPORT COMMAND MODULES
 # =========================
 # Each module should only define its own commands
-from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history
+from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, coins
 
 # Register commands from each module
 points.setup(bot)
@@ -37,8 +37,10 @@ item_export.setup(bot)    # CSV loot item export command
 claim.setup(bot)          # Claim command
 bid.setup(bot)            # Bid command
 history.setup(bot)        # History command
+coins.setup(bot)           # Coins price
 
-print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid")
+print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, coins")
+
 
 # =========================
 # EVENTS
