@@ -9,7 +9,10 @@ def setup(bot):
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
 
         if not has_permission:
-            return  # Silent fail for non-permitted
+            await interaction.response.send_message("❌ No permission.", ephemeral=True)
+            return
+
+        await interaction.response.send_message("🧹 Clearing channel...", ephemeral=True)
 
         if interaction.guild is None or interaction.channel is None:
             return
@@ -17,5 +20,6 @@ def setup(bot):
         # Purge ALL messages including bot (limit=None clears up to 14 days history)
         deleted = await interaction.channel.purge(limit=None, check=lambda m: not m.pinned, bulk_delete=True)
 
-        # No response/followup - command invisible
+        # Followup confirmation
+        await interaction.followup.send(f"✅ Cleared {len(deleted)} messages.", ephemeral=True)
 
