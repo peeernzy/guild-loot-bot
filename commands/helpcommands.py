@@ -11,7 +11,7 @@ COMMAND_DETAILS = {
     "claimsleaderboard": "View the current list of active loot claims.",
     "bidsleaderboard": "View the current bidding standings.",
     "history": "View recent winners history.",
-"allclanpoints": "Show all clan member points balances.",
+    "allclanpoints": "Show all clan member points balances.",
     "setpointlimit": "Set weekly point spending limit.",
     "price": "Check item prices.",
     "xid": "Display your Discord ID or another member's ID.",
@@ -43,6 +43,41 @@ COMMAND_DETAILS = {
 
 
 def setup(bot):
+    @bot.tree.command(name="masterlist", description="Full list of all slash commands")
+    async def masterlist_cmd(interaction: discord.Interaction):
+        desc = "**🏆 Guild Loot Bot - Full Slash Commands**\n\n"
+        desc += "**🎮 User Commands:**\n"
+        user_cmds = [
+            "points - Check balance",
+            "leaderboard - Top players",
+            "items - Loot shop",
+            "claim [code] - Claim item",
+            "bid [code] [amount] - Bid points",
+            "history [limit] - Recent winners (GMT+8)",
+            "claimsleaderboard - Active claims",
+            "bidsleaderboard - Bid standings"
+        ]
+        desc += " • " + "\n • ".join(user_cmds) + "\n\n"
+        
+        desc += "**⚙️ Admin Commands (Mod/Elder):**\n"
+        admin_cmds = [
+            "addpoints/refundpoints - Manage points",
+            "impitems [csv] - Import items",
+            "expitems - Export items",
+            "endbid/award/clearclaims - Loot management",
+            "reset - Reset data",
+            "setpointlimit - Set spend limit",
+            "cls - Clear channel",
+            "getids/xid/whois - ID tools",
+            "acmd - Admin help"
+        ]
+        desc += " • " + "\n • ".join(admin_cmds) + "\n\n"
+        
+        desc += "**Use `/cmd` for user help, `/acmd` for admin details.**"
+        
+        embed = discord.Embed(title="📋 Master Command List", description=desc, color=discord.Color.blue())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
     @bot.tree.command(name="cmd", description="View user commands")
     async def cmd(interaction: discord.Interaction):
         all_cmds = [cmd.name for cmd in bot.tree.get_commands()]
