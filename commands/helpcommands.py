@@ -11,7 +11,7 @@ COMMAND_DETAILS = {
     "claimsleaderboard": "View the current list of active loot claims.",
     "bidsleaderboard": "View the current bidding standings.",
     "history": "View recent winners history.",
-    "summary": "Check the latest event and loot summary.",
+"allclanpoints": "Show all clan member points balances.",
     "setpointlimit": "Set weekly point spending limit.",
     "price": "Check item prices.",
     "xid": "Display your Discord ID or another member's ID.",
@@ -42,7 +42,7 @@ def setup(bot):
         }
         user_cmds = [c for c in all_cmds if c not in admin_cmds]
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items", "claim", "bid", "claimsleaderboard", "bidsleaderboard", "history"}]
-        info = [f"/{c}" for c in user_cmds if c in {"summary", "price"}]
+        info = [f"/{c}" for c in user_cmds if c in {"allclanpoints", "price"}]
         lines = ["## User Commands", ""]
         if gameplay:
             lines.append("🎮 Gameplay")

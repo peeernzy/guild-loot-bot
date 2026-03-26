@@ -4,7 +4,8 @@ import discord
 
 from .loot import bid_aliases, claim_aliases, loot_meta, bids, loot_costs
 from .logger import log_event
-from .utils import can_spend
+from .utils import can_spend, spend_points, add_points, get_points
+from .loot import format_time_left
 
 
 def setup(bot):
@@ -51,6 +52,27 @@ def setup(bot):
         bids[item]["players"][user_id] = amount
         log_event("bid", user_id, item, amount)
 
-        await interaction.response.send_message(
-            f"✅ {interaction.user.display_name} bid {amount} on {item}! (-{amount} pts)"
-        )
+        embed = discord.Embed(title=f"🏆 Bids for {item}", color=discord.Color.gold())
+        
+        # Sort bids highest first
+        sorted_bids = sorted(bids[item]["players"].items(), key=lambda x: x[1], reverse=True)
+        bid_text = ""
+        for i, (bid_user_id, bid_amt) in enumerate(sorted_bids[:5], 1):
+            bidder = interaction.guild.get_member(bid_user_id)
+            name = bidder.display_name if bidder else f"Unknown ({bid_user_id})"
+            emoji = "👑" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else "➤"
+            bid_text += f"{emoji} **{name}**: {bid_amt} pts\n"
+        
+        if len(bids[item]["players"]) > 5:
+            bid_text += f"... and {len(bids[item]['players'])-5} more"
+        
+        now = datetime.datetime.now()
+        time_left = 86400 - (now - bids[item]["timestamp"]).total_seconds()
+        timer = format_time_left(time_left)
+        embed.add_field(name="Current Bids", value=bid_text or "No bids yet", inline=False)
+        embed.add_field(name="⏰ Time Left", value=timer, inline=True)
+        
+        user_points = get_points(user_id)
+        embed.set_footer(text=f"Your points: {user_points}")
+        
+        await interaction.response.send_message(embed=embed)
