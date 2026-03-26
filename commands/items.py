@@ -20,7 +20,7 @@ def setup(bot):
             "Darkening Enchantment Stone": "🌑",
             "Middle Horn": "📯",
             "Lesser Horn": "🎺",
-"Silvarin (Bundle)": "💎",
+            "Silvarin (Bundle)": "💎",
             "Gwemix Piece Pouch": "🎒",
             "Artisan": "⚒️",
             "Enchantment Tome Skill (White)": "📖",
@@ -48,12 +48,13 @@ def setup(bot):
                 rule = cost.get("rule", "No rule")
                 emoji = emoji_map.get(name, "❔")
                 points = cost["cost"]
+                pt_str = "pt" if points == 1 else "pts"
 
                 remaining = remaining_claims(user_id, name)
                 extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
 
                 source_code = loot_meta.get(name, {}).get("source_code", code)
-                field_value = f"**Cost:** {points} pts\n**Rule:** {rule}{extra}"
+                field_value = f"**Cost:** {points} {pt_str}\n**Rule:** {rule}{extra}"
 
                 if is_bidding:
                     bid_items.append((emoji, code, name, field_value, points))
