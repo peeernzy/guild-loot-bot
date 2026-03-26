@@ -25,7 +25,7 @@ COMMAND_DETAILS = {
     "clearclaims": "Remove expired loot claims.",
     "cls": "Clear recent messages in the current channel.",
     "impitems": "Import loot items from CSV with backup.",
-    "expitems": "Export the current loot item list to CSV.",
+
     "reset": "Reset bot tracking data when needed.",
 }
 
