@@ -38,7 +38,7 @@ def setup(bot):
         admin_cmds = {
             "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance",
             "listevents", "setevent", "endbid", "award", "clearclaims", "cls", "impitems", "expitems",
-            "reset", "xid", "whois", "acmd"
+            "reset", "setpointlimit", "xid", "whois", "acmd"
         }
         user_cmds = [c for c in all_cmds if c not in admin_cmds]
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items", "claim", "bid", "claimsleaderboard", "bidsleaderboard", "history"}]
@@ -63,7 +63,7 @@ def setup(bot):
         admin_cmds = {
             "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance",
             "listevents", "setevent", "endbid", "award", "clearclaims", "cls", "impitems", "expitems",
-            "reset", "xid", "whois"
+            "reset", "setpointlimit", "xid", "whois"
         }
         cmds = [c for c in all_cmds if c in admin_cmds]
         points = [f"/{c}" for c in cmds if c in {"addpoints", "refundpoints"}]

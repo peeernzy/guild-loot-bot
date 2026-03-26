@@ -21,8 +21,12 @@ def setup(bot):
             return
         user_id = interaction.user.id
 
-        if amount < 10:
-            await interaction.response.send_message("❌ Minimum bid is 10 points.")
+        # Min 10 only for first-time bidders
+        if current_bid == 0 and amount < 10:
+            await interaction.response.send_message("❌ Minimum bid is 10 points for first bid.")
+            return
+        if amount < current_bid:
+            await interaction.response.send_message(f"❌ Must bid higher than your current {current_bid} pts.")
             return
 
         if not can_spend(user_id, amount, item, is_bid=True):
