@@ -65,12 +65,16 @@ def setup(bot):
         if claim_items:
             embed.add_field(
                 name="✅ CLAIM ITEMS",
-                value="Fixed price • Use `/claim [code]`",
+                value="Fixed price • Use `/claim [alias]`",
                 inline=False
             )
-            for index, (emoji, code, name, field_value, points) in enumerate(sorted(claim_items, key=lambda x: x[4]), start=1):
+            for item in sorted(claim_items, key=lambda x: x[4]):
+                emoji, code, name, field_value, points = item
+                aliases = loot_meta.get(name, {}).get("aliases", [])
+                alias = aliases[0] if aliases else code
+                field_name = f"{emoji} [`{alias}`] {name}"
                 embed.add_field(
-                    name=f"{emoji} [{index}] {name}",
+                    name=field_name,
                     value=field_value,
                     inline=True
                 )
@@ -79,12 +83,16 @@ def setup(bot):
         if bid_items:
             embed.add_field(
                 name="⚔️ BIDDING ITEMS",
-                value="Highest bid wins • Use `/bid [code] [amount]`",
+                value="Highest bid wins • Use `/bid [alias] [amount]`",
                 inline=False
             )
-            for index, (emoji, code, name, field_value, points) in enumerate(sorted(bid_items, key=lambda x: x[4], reverse=True), start=1):
+            for item in sorted(bid_items, key=lambda x: x[4], reverse=True):
+                emoji, code, name, field_value, points = item
+                aliases = loot_meta.get(name, {}).get("aliases", [])
+                alias = aliases[0] if aliases else code
+                field_name = f"{emoji} [`{alias}`] {name}"
                 embed.add_field(
-                    name=f"{emoji} [{index}] {name}",
+                    name=field_name,
                     value=field_value,
                     inline=True
                 )
