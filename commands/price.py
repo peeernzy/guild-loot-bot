@@ -1,42 +1,39 @@
 import discord
-import aiohttp
+from discord.ext import commands
+from discord import app_commands
 
-def setup(bot):
-    @bot.tree.command(name="price", description="Check WEMIX & USDT price in PHP and USD")
-    async def price_cmd(interaction: discord.Interaction):
-        async with aiohttp.ClientSession() as session:
-            try:
-                # Fetch WEMIX and USDT prices in PHP + USD
-                async with session.get(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=wemix,tether&vs_currencies=php,usd'
-                ) as resp:
-                    data = await resp.json()
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=discord.Intents.all())
 
-                    wemix_data = data.get('wemix')
-                    usdt_data = data.get('tether')
+    async def setup_hook(self):
+        # Sync commands automatically
+        await self.tree.sync()
 
-                    if wemix_data and usdt_data:
-                        wemix_php = wemix_data.get('php')
-                        wemix_usd = wemix_data.get('usd')
-                        usdt_php = usdt_data.get('php')
-                        usdt_usd = usdt_data.get('usd')
+    async def on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        # Handle cooldown errors globally
+        if isinstance(error, app_commands.CommandOnCooldown):
+            await interaction.response.send_message(
+                f"⏳ Please wait {error.retry_after:.1f} seconds before using `{interaction.command.name}` again.",
+                ephemeral=True
+            )
+        else:
+            # Fallback for other errors
+            if interaction.response.is_done():
+                await interaction.followup.send("❌ An unexpected error occurred.", ephemeral=True)
+            else:
+                await interaction.response.send_message("❌ An unexpected error occurred.", ephemeral=True)
 
-                        embed = discord.Embed(
-                            title="💰 Coin Prices",
-                            description=(
-                                f"📌 WEMIX → PHP: ₱{wemix_php:,.2f}\n"
-                                f"📌 WEMIX → USD: ${wemix_usd:,.2f}\n\n"
-                                f"📌 USDT → PHP: ₱{usdt_php:,.2f}\n"
-                                f"📌 USDT → USD: ${usdt_usd:,.2f}"
-                            ),
-                            color=discord.Color.green()
-                        )
-                        embed.set_footer(text="Data from CoinGecko API")
-                        await interaction.response.send_message(embed=embed, ephemeral=True)
-                    else:
-                        await interaction.response.send_message("❌ Price data not found.", ephemeral=True)
+# Example Cog with your price command
+class PriceCog(discord.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-            except Exception as e:
-                await interaction.response.send_message(
-                    f"❌ Failed to fetch prices: {str(e)}", ephemeral=True
-                )
+    @app_commands.command(name="price", description="Check WEMIX & USDT price in PHP and USD")
+    @app_commands.checks.cooldown(1, 10.0, key=lambda i: i.user.id)  # 1 use per 10s per user
+    async def price_cmd(self, interaction: discord.Interaction):
+        # Your price logic here (with retry, etc.)
+        await interaction.response.send_message("💰 Price command executed!", ephemeral=True)
+
+async def setup(bot):
+    await bot.add_cog(PriceCog(bot))
