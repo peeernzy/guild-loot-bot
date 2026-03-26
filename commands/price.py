@@ -1,11 +1,13 @@
 import discord
 import aiohttp
 import asyncio
+import os
 from datetime import datetime
 from discord.ext import commands
 from discord import app_commands
 
-CMC_API_KEY = "223c820789d84b9ea99697079111d0b5"  # replace with your actual key
+# Load API key from environment variable for security
+CMC_API_KEY = os.getenv("CMC_API_KEY", "YOUR_CMC_API_KEY")
 
 class PriceCog(commands.Cog):
     def __init__(self, bot):
@@ -17,23 +19,24 @@ class PriceCog(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async def fetch_prices():
                 url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-                params = {
-                    "symbol": "WEMIX,USDT",
-                    "convert": "PHP,USD"
-                }
-                headers = {
-                    "X-CMC_PRO_API_KEY": CMC_API_KEY
-                }
+                params = {"symbol": "WEMIX,USDT", "convert": "PHP,USD"}
+                headers = {"X-CMC_PRO_API_KEY": CMC_API_KEY}
                 async with session.get(url, params=params, headers=headers) as resp:
                     return await resp.json()
 
             try:
+                # First attempt
                 data = await fetch_prices()
 
                 # Retry once if missing data
                 if "data" not in data or not data["data"].get("WEMIX") or not data["data"].get("USDT"):
                     await asyncio.sleep(1)
                     data = await fetch_prices()
+
+                if "data" not in data:
+                    error_msg = data.get("status", {}).get("error_message", "Unknown error")
+                    await interaction.response.send_message(f"❌ API error: {error_msg}", ephemeral=True)
+                    return
 
                 wemix_data = data["data"].get("WEMIX", {})
                 usdt_data = data["data"].get("USDT", {})
