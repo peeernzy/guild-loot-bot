@@ -3,27 +3,7 @@ import json
 import datetime
 from pathlib import Path
 
-HISTORY_FILE = Path("winners_history.json")
 
-def load_history():
-    if HISTORY_FILE.exists():
-        with open(HISTORY_FILE, 'r') as f:
-            return json.load(f)
-    return []
-
-def append_winner(username: str, user_id: int, item: str, points: int, event_type: str):
-    entry = {
-        "username": username,
-        "user_id": user_id,
-        "item": item,
-        "points": points,
-        "type": event_type,
-        "timestamp": datetime.datetime.now().isoformat()
-    }
-    history = load_history()
-    history.append(entry)
-    with open(HISTORY_FILE, 'w') as f:
-        json.dump(history, f, indent=2, default=str)
 
 def load_loot_log():
     log = []
@@ -55,20 +35,29 @@ def setup(bot):
         
         recent = history[:limit]
         
+        # Resolve user names
+        unique_ids = {entry['user_id'] for entry in recent}
+        winner_names = {}
+        guild = interaction.guild
+        for uid in unique_ids:
+            member = guild.get_member(uid)
+            winner_names[uid] = member.display_name if member else f"Unknown User ({uid})"
+        
         embed = discord.Embed(
             title="🏆 Winner History",
-            description="Recent claim/bid/award winners from loot_log.json",
+            description="Recent winners with name, date, item, points",
             color=discord.Color.gold()
         )
         
         for entry in recent:
             timestamp = datetime.datetime.fromisoformat(entry["timestamp"])
             date_str = timestamp.strftime("%Y-%m-%d %H:%M")
+            winner_name = winner_names[entry['user_id']]
             type_emoji = "✅" if entry["event"] == "win" else "🎁" if entry["event"] in ["award", "grant"] else "❓"
-            value = f"{type_emoji} **{entry['item']}** ({entry.get('amount', 0)} pts)"
+            amount = entry.get('amount', 0)
             embed.add_field(
-                name=date_str,
-                value=value,
+                name=f"{winner_name} - {date_str}",
+                value=f"{type_emoji} **{entry['item']}** ({amount} pts)",
                 inline=False
             )
         
