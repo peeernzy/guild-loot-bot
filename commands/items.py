@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
-from .utils_trial import remaining_claims
+from .utils import remaining_claims
 
 def setup(bot):
     @bot.tree.command(name="items", description="Show loot codes and aliases")
