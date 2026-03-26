@@ -12,7 +12,7 @@
 4. [ ] Test /history shows names/date/item/pts.
 5. [ ] Test /grant logs to history.
 6. [ ] Verify bidding auto-post and ties (already implemented).
-7. [ ] attempt_completion
+7. [x] Add /refreshdata (/reset enhanced) ✅
 
 **Status:** Edits complete. History now shows "WinnerName - YYYY-MM-DD HH:MM" with item/pts below. Auto-post/manual/ties were already functional.
 

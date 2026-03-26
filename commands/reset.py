@@ -21,6 +21,11 @@ def setup(bot):
         claims.clear()
         leaderboard.clear()
         weekly_spent.clear()
+        # Clear history for testing
+        import os
+        if os.path.exists("loot_log.json"):
+            os.remove("loot_log.json")
+        print("loot_log.json cleared")
 
-        await interaction.response.send_message("⚠️ All bot data has been reset by an authorized user.")
+        await interaction.response.send_message("⚠️ All bot data + history cleared for testing.")
         print(f"[RESET] {interaction.user} cleared all bot data.")
