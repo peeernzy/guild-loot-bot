@@ -1,22 +1,11 @@
-# Bid Embed Update - Success!
+# All Fixes Complete 🏁
 
-**Previous:** Fixed refundpoints NameError.
+**Refundpoints:** Fixed NameError → uses deduct_points (no cycle).
 
-**Update:** /bid command embed footer now displays:
-```
-Current Points: {remaining}pts + (bidding {bid_amount}pts)
-Total Points: {total} pts
-```
+**Bid Embed:** Added "Current Points + bidding | Total".
 
-**Changes:**
-- Rewrote commands/bid.py footer logic.
-- user_points = get_points(user_id)  # remaining after bid deduction
-- bidding_amount from bids dict
-- Matches requested format.
+**Bid Logic:** Fixed net spend check. Now bid 14 works when 4 remaining +10 current (net 4 needed).
 
-**Status:** Complete. Test with `python bot.py` then `/bid`.
+**Key Change:** `net_amount = max(0, amount - current_bid)` passed to can_spend(is_bid=True).
 
-Steps:
-- [x] Plan & edits
-- [x] bid.py updated
-- [x] Verified format
+Bot runs without errors. Test fully functional.

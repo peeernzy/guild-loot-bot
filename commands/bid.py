@@ -21,10 +21,8 @@ def setup(bot):
             return
         user_id = interaction.user.id
 
-        now = datetime.datetime.now()
-
         if item not in bids:
-            bids[item] = {"players": {}, "timestamp": now}
+            bids[item] = {"players": {}, "timestamp": datetime.datetime.now()}
 
         current_bid = bids[item]["players"].get(user_id, 0)
         
@@ -32,27 +30,18 @@ def setup(bot):
         if current_bid == 0 and amount < 10:
             await interaction.response.send_message("❌ Minimum bid is 10 points for first bid.")
             return
-        if amount < current_bid:
+        
+        if amount <= current_bid:
             await interaction.response.send_message(f"❌ Must bid higher than your current {current_bid} pts.")
             return
 
-        if not can_spend(user_id, amount, item, is_bid=True):
-            await interaction.response.send_message("❌ Not enough points.")
+        # Net amount needed = new bid - current bid (refunded later)
+        net_amount = max(0, amount - current_bid)
+        
+        if not can_spend(user_id, net_amount, item, is_bid=True):
+            await interaction.response.send_message("❌ Not enough points for this bid increase.")
             return
 
-        now = datetime.datetime.now()
-
-        if item not in bids:
-            bids[item] = {"players": {}, "timestamp": now}
-
-        current_bid = bids[item]["players"].get(user_id, 0)
-        if amount <= current_bid:
-            await interaction.response.send_message(
-                f"❌ Must bid higher than {current_bid}."
-            )
-            return
-
-        from .utils import spend_points, add_points
         # Refund old bid first
         if current_bid > 0:
             add_points(user_id, current_bid)
@@ -77,14 +66,13 @@ def setup(bot):
         if len(bids[item]["players"]) > 5:
             bid_text += f"... and {len(bids[item]['players'])-5} more"
         
-        now = datetime.datetime.now()
-        time_left = 86400 - (now - bids[item]["timestamp"]).total_seconds()
+        time_left = 86400 - (datetime.datetime.now() - bids[item]["timestamp"]).total_seconds()
         timer = format_time_left(time_left)
         embed.add_field(name="Current Bids", value=bid_text or "No bids yet", inline=False)
         embed.add_field(name="⏰ Time Left", value=timer, inline=True)
         
         user_points = get_points(user_id)
-        bidding_amount = bids[item]["players"][user_id]
+        bidding_amount = amount
         embed.set_footer(text=f"Current Points: {user_points}pts + (bidding {bidding_amount}pts)\nTotal Points: {user_points + bidding_amount} pts")
         
         await interaction.response.send_message(embed=embed)
