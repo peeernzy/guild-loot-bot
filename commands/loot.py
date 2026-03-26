@@ -371,7 +371,7 @@ n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
             await interaction.response.send_message("✅ No expired claims to clear.", ephemeral=True)
 
     # ===== GRANT =====
-    @bot.tree.command(name="grant", description="Grant a loot item")
+@bot.tree.command(name="grantitem", description="Grant a loot item")
     async def grant_cmd(interaction: discord.Interaction, member: discord.Member, code: str, cost: int = None):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
@@ -399,7 +399,7 @@ n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
         )
 
     # ===== REFUND =====
-    @bot.tree.command(name="refund", description="Deduct points from a member")
+    @bot.tree.command(name="refundpoints", description="Deduct points from a member")
     async def refund_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)

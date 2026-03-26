@@ -241,8 +241,8 @@ def setup(bot):
             f"💰 {member.display_name} has {balance} points."
         )
 
-    @bot.tree.command(name="add", description="Add points to a member")
-    async def add_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
+@bot.tree.command(name="addpoints", description="Add points to a member")
+    async def addpoints_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
 
