@@ -1,6 +1,7 @@
 import discord
 from .points import reset_all_points
-from .loot import claims, leaderboard, weekly_spent
+from .loot import claims, leaderboard
+from .utils import weekly_spent
 
 def setup(bot):
     @bot.tree.command(name="reset", description="Clear all bot data (Moderator/Elder only)")
