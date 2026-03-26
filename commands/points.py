@@ -5,8 +5,6 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .utils import spend_points
-
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -274,10 +272,11 @@ def setup(bot):
             )
             return
 
-        new_balance = spend_points(member.id, amount)
-        log_event("refund", member.id, "Points", amount)
+        new_balance = deduct_points(member.id, amount)
+        # log_event("refund", member.id, "Points", amount)
 
         await interaction.response.send_message(
             f"✅ Deducted {amount} points from {member.display_name}.\n"
             f"💰 New Balance: {new_balance}"
         )
+
