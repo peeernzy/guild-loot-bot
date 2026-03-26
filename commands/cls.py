@@ -19,7 +19,7 @@ def setup(bot):
             return
 
         # Purge ALL messages including bot (limit=None clears up to 14 days history)
-        deleted = await interaction.channel.purge(limit=None, check=lambda m: not m.pinned, bulk_delete=True)
+        deleted = await interaction.channel.purge(limit=None, check=lambda m: not m.pinned)
 
         # Followup confirmation
         await interaction.followup.send(f"✅ Cleared {len(deleted)} messages.", ephemeral=True)
