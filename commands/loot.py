@@ -1,4 +1,5 @@
-import discord, asyncio, datetime, json, random
+import discord, asyncio, datetime, json, random, os
+
 import os
 from .utils import can_spend, spend_points, remaining_claims
 from .logger import log_event
