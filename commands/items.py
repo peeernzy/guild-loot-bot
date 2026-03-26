@@ -20,7 +20,7 @@ def setup(bot):
             "Darkening Enchantment Stone": "🌑",
             "Middle Horn": "📯",
             "Lesser Horn": "🎺",
-            "Silvarin": "💎",
+"Silvar
             "Gwemix Piece Pouch": "🎒",
             "Artisan": "⚒️",
             "Enchantment Tome Skill (White)": "📖",
