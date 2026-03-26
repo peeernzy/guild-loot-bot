@@ -80,7 +80,8 @@ def reload_loot_items():
     loot_meta.update(new_meta)
     return loot_costs, claim_aliases, bid_aliases, loot_meta
 
-CHANNEL_ID = int(os.getenv('LOOT_CHANNEL_ID', '1485956297227763752'))  # From .env or default
+import os
+CHANNEL_ID = 1485956297227763752  # Set in .env LOOT_CHANNEL_ID or change here
 
 # =========================
 # BACKGROUND TASK
