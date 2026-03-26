@@ -241,7 +241,7 @@ def setup(bot):
             f"💰 {member.display_name} has {balance} points."
         )
 
-@bot.tree.command(name="addpoints", description="Add points to a member")
+    @bot.tree.command(name="addpoints", description="Add points to a member")
     async def addpoints_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
@@ -257,5 +257,25 @@ def setup(bot):
 
         await interaction.response.send_message(
             f"✅ Added {amount} points to {member.display_name}.\n"
+            f"💰 New Balance: {new_balance}"
+        )
+
+    @bot.tree.command(name="refundpoints", description="Deduct points from a member")
+    async def refundpoints_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
+        allowed_roles = {"Moderator", "Elder"}
+        has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
+
+        if not has_permission:
+            await interaction.response.send_message(
+                "❌ Only Moderators and Elders can refund points.",
+                ephemeral=True
+            )
+            return
+
+        new_balance = spend_points(member.id, amount)
+        log_event("refund", member.id, "Points", amount)
+
+        await interaction.response.send_message(
+            f"✅ Deducted {amount} points from {member.display_name}.\n"
             f"💰 New Balance: {new_balance}"
         )

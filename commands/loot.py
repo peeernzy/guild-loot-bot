@@ -1,4 +1,5 @@
 import discord, asyncio, datetime, json, random
+import os
 from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
 from .logger import log_event
 
@@ -80,8 +81,7 @@ def reload_loot_items():
     loot_meta.update(new_meta)
     return loot_costs, claim_aliases, bid_aliases, loot_meta
 
-import os
-CHANNEL_ID = 1485956297227763752  # Set in .env LOOT_CHANNEL_ID or change here
+CHANNEL_ID = int(os.getenv('LOOT_CHANNEL_ID', '1485956297227763752'))
 
 # =========================
 # BACKGROUND TASK
@@ -141,7 +141,7 @@ async def check_claims(bot):
                         )
                     else:
                         await channel.send(
-                            f"⚠️ {winner.display_name} couldn’t afford their bid."
+                            f"⚠️ {winner.display_name} couldn't afford their bid."
                         )
 
                 del bids[item]
@@ -225,7 +225,7 @@ def setup(bot):
 
         await interaction.response.send_message(embed=embed)
 
-    # ===== END BID (AUTO-SELECT HIGHEST BIDDER) =====
+    # ===== END BID =====
     @bot.tree.command(name="endbid", description="Close bidding for an item")
     async def end_bidding_cmd(interaction: discord.Interaction, item: str):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
@@ -281,8 +281,7 @@ def setup(bot):
         channel = interaction.guild.get_channel(CHANNEL_ID)
         if channel:
             await channel.send(
-                f"🎉 **Bidding Ended!**\
-n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
+                f"🎉 **Bidding Ended!** {winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
             )
 
         await interaction.response.send_message(
@@ -290,14 +289,14 @@ n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
             ephemeral=True
         )
 
-    # ===== AWARD (MANUAL DISTRIBUTION) =====
+    # ===== AWARD =====
     @bot.tree.command(name="award", description="Award an item to a member")
     async def award_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        # Find the item (by name or code)
+        # Find the item
         target_item = None
         item_lookup = item.lower()
         for alias_map in (claim_aliases, bid_aliases):
@@ -371,7 +370,7 @@ n{winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
             await interaction.response.send_message("✅ No expired claims to clear.", ephemeral=True)
 
     # ===== GRANT =====
-@bot.tree.command(name="grantitem", description="Grant a loot item")
+    @bot.tree.command(name="grantitem", description="Grant a loot item")
     async def grant_cmd(interaction: discord.Interaction, member: discord.Member, code: str, cost: int = None):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
