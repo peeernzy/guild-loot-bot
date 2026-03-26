@@ -1,6 +1,5 @@
 import discord
 import aiohttp
-import asyncio
 
 def setup(bot):
     @bot.tree.command(name="coins", description="Check WEMIX & USDT price in PHP")
@@ -13,8 +12,8 @@ def setup(bot):
                     usdt_price = data['tether']['php']
                 
                 embed = discord.Embed(
-                    title="💰 WEMIX & USDT Price",
-                    description=f"**WEMIX:** ₱{wemix_price:,.2f} PHP\n**USDT:** ₱{usdt_price:,.2f} PHP",
+                    title="💰 Coin Prices",
+                    description=f"📌 WEMIX Price to PHP - ₱{wemix_price:,.2f}\n\n📌 USD to PHP - ₱{usdt_price:,.2f}",
                     color=discord.Color.green()
                 )
                 embed.set_footer(text="Data from CoinGecko API")

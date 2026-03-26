@@ -8,7 +8,7 @@ def setup(bot):
     async def items_cmd(interaction: discord.Interaction):
         embed = discord.Embed(
             title="🎁 Loot Shop",
-            description="Earn points from Sindris Island and Clan Sanctuary, then claim your rewards!",
+            description="Earn points from **Sindri's Island** and **Clan Sanctuary**, then claim your rewards!",
             color=discord.Color.gold()
         )
 
@@ -91,7 +91,7 @@ def setup(bot):
         # Add quick reference
         embed.add_field(
             name="🎯 QUICK REFERENCE",
-            value="**Earn Points:**\n🟢 Sindris Win: +20\n🟡 Sindris Lose: +10\n🔵 Clan Participated: +15",
+            value="**Earn Points:**\n🟢 **Sindri's Island** Win: +20\n🟡 **Sindri's Island** Lose: +10\n🔵 **Clan Sanctuary** Participated: +15",
             inline=False
         )
 
@@ -107,3 +107,4 @@ def setup(bot):
         embed.set_footer(text="Use /points to check your balance • /leaderboard for top earners")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
