@@ -2,8 +2,8 @@ import discord
 import aiohttp
 
 def setup(bot):
-    @bot.tree.command(name="coins", description="Check WEMIX & USDT price in PHP")
-    async def coins_cmd(interaction: discord.Interaction):
+    @bot.tree.command(name="price", description="Check WEMIX & USDT price in PHP")
+    async def price_cmd(interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get('https://api.coingecko.com/api/v3/simple/price?ids=wemix,tether&vs_currencies=php') as resp:
