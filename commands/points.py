@@ -5,6 +5,8 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
 
+from .utils import spend_points
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:

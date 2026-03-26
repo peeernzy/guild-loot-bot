@@ -84,6 +84,7 @@ def setup(bot):
         embed.add_field(name="⏰ Time Left", value=timer, inline=True)
         
         user_points = get_points(user_id)
-        embed.set_footer(text=f"Your points: {user_points}")
+        bidding_amount = bids[item]["players"][user_id]
+        embed.set_footer(text=f"Current Points: {user_points}pts + (bidding {bidding_amount}pts)\nTotal Points: {user_points + bidding_amount} pts")
         
         await interaction.response.send_message(embed=embed)
