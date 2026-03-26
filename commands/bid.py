@@ -21,6 +21,13 @@ def setup(bot):
             return
         user_id = interaction.user.id
 
+        now = datetime.datetime.now()
+
+        if item not in bids:
+            bids[item] = {"players": {}, "timestamp": now}
+
+        current_bid = bids[item]["players"].get(user_id, 0)
+        
         # Min 10 only for first-time bidders
         if current_bid == 0 and amount < 10:
             await interaction.response.send_message("❌ Minimum bid is 10 points for first bid.")
