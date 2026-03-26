@@ -46,11 +46,9 @@ print("📦 Loaded command modules: points, loot, leaderboard, items, summary, r
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-    # Load ASYNC cogs
-    from commands import cls, item_import, setpointlimit, price
+    # Load ASYNC cogs ONLY (cls, price)
+    from commands import cls, price
     await cls.setup(bot)
-    await item_import.setup(bot)
-    await setpointlimit.setup(bot)
     await price.setup(bot)
     # Sync slash commands
     try:
