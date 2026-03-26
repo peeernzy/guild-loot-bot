@@ -37,8 +37,10 @@ item_export.setup(bot)    # CSV loot item export command
 claim.setup(bot)          # Claim command
 bid.setup(bot)            # Bid command
 history.setup(bot)        # History command
+coins.setup(bot)           # Coins command
+setpointlimit.setup(bot)   # Set point limit
 
-print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history")
+print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, coins, setpointlimit")
 
 
 # =========================
