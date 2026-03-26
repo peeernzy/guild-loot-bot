@@ -29,20 +29,31 @@ COMMAND_DETAILS = {
     "expitems": "Export loot items to CSV.",
     "grant": "Grant a loot item directly (admin).",
     "reset": "Reset bot tracking data when needed.",
+    "summary": "Guild event summary.",
+    "attendance": "Mark attendance.",
+    "setpointlimit": "Set point limit.",
+    "price": "Check item price.",
+    "claim": "Claim loot item.",
+    "bid": "Place bid on item.",
+    "items": "View loot shop.",
+    "leaderboard": "View points leaderboard.",
+    "history": "Recent winners.",
 }
+
+
 
 def setup(bot):
     @bot.tree.command(name="cmd", description="View user commands")
     async def cmd(interaction: discord.Interaction):
         all_cmds = [cmd.name for cmd in bot.tree.get_commands()]
         admin_cmds = {
-            "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance",
+            "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance", "importattendance",
             "listevents", "setevent", "endbid", "award", "clearclaims", "cls", "impitems", "expitems",
-            "reset", "setpointlimit", "xid", "whois", "acmd"
+            "reset", "setpointlimit", "xid", "whois", "acmd", "summary", "attendance"
         }
         user_cmds = [c for c in all_cmds if c not in admin_cmds]
         gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items", "claim", "bid", "claimsleaderboard", "bidsleaderboard", "history"}]
-        info = [f"/{c}" for c in user_cmds if c in {"allclanpoints", "price"}]
+        info = [f"/{c}" for c in user_cmds if c in {"allclanpoints", "price", "summary"}]
         lines = ["## User Commands", ""]
         if gameplay:
             lines.append("🎮 Gameplay")
