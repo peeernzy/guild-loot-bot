@@ -1,5 +1,5 @@
 import discord, asyncio, datetime, json, random
-from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
+from .utils_trial import can_spend, spend_points, weekly_spent, remaining_claims, add_points
 from .logger import log_event
 
 claims = {}

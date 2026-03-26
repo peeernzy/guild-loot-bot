@@ -4,7 +4,7 @@ import discord
 
 from .loot import bid_aliases, claim_aliases, loot_meta, bids, loot_costs
 from .logger import log_event
-from .utils import can_spend
+from .utils_trial import can_spend
 
 
 def setup(bot):
