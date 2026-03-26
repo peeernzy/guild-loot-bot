@@ -54,7 +54,7 @@ async def on_ready():
     await cls.setup(bot)
     item_import.setup(bot)
     setpointlimit.setup(bot)
-    price.setup(bot)
+    await price.setup(bot)
     # Sync slash commands
     try:
         synced = await bot.tree.sync()
