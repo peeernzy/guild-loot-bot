@@ -41,10 +41,16 @@ def setup(bot):
             return
 
         from .utils import spend_points, add_points
-        spend_points(user_id, amount, item)  # Deduct on bid
+        # Refund old bid first
+        if current_bid > 0:
+            add_points(user_id, current_bid)
+            print(f"[BID] Refunded {current_bid} pts to {user_id}")
+
+        # Deduct new bid
+        spend_points(user_id, amount, item)
         bids[item]["players"][user_id] = amount
         log_event("bid", user_id, item, amount)
 
         await interaction.response.send_message(
-            f"{interaction.user.display_name} bid {amount} on {item}! (deducted)"
+            f"✅ {interaction.user.display_name} bid {amount} on {item}! (-{amount} pts)"
         )
