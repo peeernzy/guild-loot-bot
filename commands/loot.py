@@ -206,11 +206,13 @@ def setup(bot):
         winning_bid = bids[target_item]["players"][winner_id]
         winner = interaction.guild.get_member(winner_id)
 
-        if not can_spend(winner_id, winning_bid, target_item):
-            await interaction.response.send_message(f"❌ {winner.display_name} cannot afford their bid ({winning_bid} pts).", ephemeral=True)
-            return
-
-        spend_points(winner_id, winning_bid, target_item)
+        # Already deducted on bid - skip spend_points & can_spend
+        from .utils import add_points
+        for loser_id in bids[target_item]["players"]:
+            if loser_id != winner_id:
+                loser_bid = bids[target_item]["players"][loser_id]
+                add_points(loser_id, loser_bid)
+        
         leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
         log_event("win", winner_id, target_item, winning_bid)
         del bids[target_item]
