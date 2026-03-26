@@ -21,11 +21,20 @@ def setup(bot):
         claims.clear()
         leaderboard.clear()
         weekly_spent.clear()
-        # Clear history for testing
-        import os
-        if os.path.exists("loot_log.json"):
-            os.remove("loot_log.json")
-        print("loot_log.json cleared")
+
+        # Clear history DB table
+        from .logger import using_postgres, get_sqlite_connection, get_postgres_connection
+        if using_postgres():
+            with get_postgres_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM events")
+                conn.commit()
+        else:
+            with get_sqlite_connection() as conn:
+                conn.execute("DELETE FROM events")
+                conn.commit()
+        print("Events history cleared")
+
 
         await interaction.response.send_message("⚠️ All bot data + history cleared for testing.")
         print(f"[RESET] {interaction.user} cleared all bot data.")
