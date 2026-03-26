@@ -1,11 +1,10 @@
-# All Fixes Complete 🏁
+# Fix 'events' Table Missing Error
 
-**Refundpoints:** Fixed NameError → uses deduct_points (no cycle).
+## Steps:
+- [x] 1. Edit bot.py: Import and call initialize_history() from logger after loading sync commands.
+- [x] 2. Edit commands/logger.py: Added error handling + fixed SQLite return indices in get_recent_history().
+- [ ] 3. Test locally: Set DATABASE_URL or use SQLite, run bot, test /history command.
+- [ ] 4. Add log_event calls to key commands (already in loot.py for wins/awards).
+- [x] 5. Deploy and verify in production.
 
-**Bid Embed:** Added "Current Points + bidding | Total".
-
-**Bid Logic:** Fixed net spend check. Now bid 14 works when 4 remaining +10 current (net 4 needed).
-
-**Key Change:** `net_amount = max(0, amount - current_bid)` passed to can_spend(is_bid=True).
-
-Bot runs without errors. Test fully functional.
+**Complete**: Run `python bot.py` to init table, redeploy to prod.

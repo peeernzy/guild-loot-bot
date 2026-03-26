@@ -51,13 +51,21 @@ def log_event(event_type, user_id, item, amount=None):
 
 def get_recent_history(limit=50):
     if using_postgres():
-        with get_postgres_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT timestamp, event, user_id, item, amount FROM events ORDER BY timestamp DESC LIMIT %s", (limit,))
-                rows = cur.fetchall()
-        return [{"timestamp": r[0], "event": r[1], "user_id": r[2], "item": r[3], "amount": r[4]} for r in rows]
+        try:
+            with get_postgres_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT timestamp, event, user_id, item, amount FROM events ORDER BY timestamp DESC LIMIT %s", (limit,))
+                    rows = cur.fetchall()
+            return [{"timestamp": r[0], "event": r[1], "user_id": r[2], "item": r[3], "amount": r[4]} for r in rows]
+        except Exception as e:
+            print(f"[HISTORY] Postgres query failed: {e}")
+            return []
     else:
-        with get_sqlite_connection() as conn:
-            rows = conn.execute("SELECT timestamp, event, user_id, item, amount FROM events ORDER BY timestamp DESC LIMIT ?", (limit,)).fetchall()
-        return [{"timestamp": r[1], "event": r[2], "user_id": r[3], "item": r[4], "amount": r[5]} for r in rows]
+        try:
+            with get_sqlite_connection() as conn:
+                rows = conn.execute("SELECT timestamp, event, user_id, item, amount FROM events ORDER BY timestamp DESC LIMIT ?", (limit,)).fetchall()
+            return [{"timestamp": r[0], "event": r[1], "user_id": r[2], "item": r[3], "amount": r[4]} for r in rows]
+        except Exception as e:
+            print(f"[HISTORY] SQLite query failed: {e}")
+            return []
 

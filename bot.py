@@ -39,6 +39,9 @@ history.setup(bot)
 
 print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, setpointlimit, price")
 
+from commands.logger import initialize_history
+initialize_history()
+
 
 # =========================
 # EVENTS
