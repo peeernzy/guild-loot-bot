@@ -12,7 +12,7 @@ def setup(bot):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
 
         if interaction.guild is None or interaction.channel is None:
             await interaction.followup.send("❌ Invalid channel.", ephemeral=True)
@@ -21,6 +21,5 @@ def setup(bot):
         # Purge ALL messages including bot (limit=None clears up to 14 days history)
         deleted = await interaction.channel.purge(limit=None, check=lambda m: not m.pinned)
 
-        # Followup confirmation
-        await interaction.followup.send(f"✅ Cleared {len(deleted)} messages.", ephemeral=True)
+        # No followup - completely invisible
 
