@@ -49,12 +49,12 @@ initialize_history()
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-    # Load ASYNC cogs ONLY (cls, item_import, setpointlimit, price)
+    # Load cogs (async with await, sync without)
     from commands import cls, item_import, setpointlimit, price
     await cls.setup(bot)
-    await item_import.setup(bot)
-    await setpointlimit.setup(bot)
-    await price.setup(bot)
+    item_import.setup(bot)
+    setpointlimit.setup(bot)
+    price.setup(bot)
     # Sync slash commands
     try:
         synced = await bot.tree.sync()
