@@ -20,19 +20,20 @@ def get_points(member_id: int) -> int:
 # =========================
 # MAIN CHECK
 # =========================
-def can_spend(member_id: int, amount: int, item: str = None) -> bool:
+def can_spend(member_id: int, amount: int, item: str = None, is_bid: bool = False) -> bool:
     current_week = _current_week()
 
     if get_points(member_id) < amount:
         return False
 
-    record = weekly_spent.get(member_id, {"week": current_week, "spent": 0})
-    if record["week"] != current_week:
-        record = {"week": current_week, "spent": 0}
-    weekly_spent[member_id] = record
+    if not is_bid:
+        record = weekly_spent.get(member_id, {"week": current_week, "spent": 0})
+        if record["week"] != current_week:
+            record = {"week": current_week, "spent": 0}
+        weekly_spent[member_id] = record
 
-    if record["spent"] + amount > 50:
-        return False
+        if record["spent"] + amount > 50:
+            return False
 
     item_record = weekly_item_claims.get(member_id, {"week": current_week, "items": {}})
     if item_record["week"] != current_week:

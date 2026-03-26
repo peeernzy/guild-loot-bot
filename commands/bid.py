@@ -24,7 +24,7 @@ def setup(bot):
             await interaction.response.send_message("❌ Minimum bid is 10 points.")
             return
 
-        if not can_spend(user_id, amount, item):
+        if not can_spend(user_id, amount, item, is_bid=True):
             await interaction.response.send_message("❌ Not enough points.")
             return
 
@@ -40,9 +40,11 @@ def setup(bot):
             )
             return
 
+        from .utils import spend_points, add_points
+        spend_points(user_id, amount, item)  # Deduct on bid
         bids[item]["players"][user_id] = amount
         log_event("bid", user_id, item, amount)
 
         await interaction.response.send_message(
-            f"{interaction.user.display_name} bid {amount} on {item}!"
+            f"{interaction.user.display_name} bid {amount} on {item}! (deducted)"
         )

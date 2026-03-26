@@ -114,13 +114,18 @@ async def check_claims(bot):
                     winning_bid = bid_data["players"][winner_id]
                     winner = await channel.guild.fetch_member(winner_id)
 
-                    if can_spend(winner_id, winning_bid, item):
-                        spend_points(winner_id, winning_bid, item)
-                        leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
-                        log_event("win", winner_id, item, winning_bid)
-                        await channel.send(f"🎉 {winner.display_name} won {item} with {winning_bid} pts!")
-                    else:
-                        await channel.send(f"⚠️ {winner.display_name} couldn't afford their bid.")
+                    # Refund all losers
+                    from .utils import add_points
+                    for loser_id in bid_data["players"]:
+                        if loser_id != winner_id:
+                            loser_bid = bid_data["players"][loser_id]
+                            add_points(loser_id, loser_bid)
+
+                    # Winner already deducted - no extra deduct
+                    leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
+                    log_event("win", winner_id, item, winning_bid)
+                    await channel.send(f"🎉 {winner.display_name} won {item} with {winning_bid} pts!")
+                    del bids[item]
                 del bids[item]
 
         await asyncio.sleep(60)
