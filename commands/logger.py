@@ -38,14 +38,14 @@ def log_event(event_type, user_id, item, amount=None):
             with conn.cursor() as cur:
                 cur.execute(
                     "INSERT INTO events (timestamp, event, user_id, item, amount) VALUES (%s, %s, %s, %s, %s)",
-                    (datetime.datetime.now().isoformat(), event_type, str(user_id), item, amount)
+                    (datetime.datetime.now(datetime.timezone.utc).isoformat(), event_type, str(user_id), item, amount)
                 )
             conn.commit()
     else:
         with get_sqlite_connection() as conn:
             conn.execute(
                 "INSERT INTO events (timestamp, event, user_id, item, amount) VALUES (?, ?, ?, ?, ?)",
-                (datetime.datetime.now().isoformat(), event_type, str(user_id), item, amount)
+                (datetime.datetime.now(datetime.timezone.utc).isoformat(), event_type, str(user_id), item, amount)
             )
             conn.commit()
 

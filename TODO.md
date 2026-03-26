@@ -7,4 +7,4 @@
 - [ ] 4. Add log_event calls to key commands (already in loot.py for wins/awards).
 - [x] 5. Deploy and verify in production.
 
-**Complete**: Run `python bot.py` to init table, redeploy to prod.
+**Complete**: Table error fixed, timezone GMT+8 in history. Test & deploy.

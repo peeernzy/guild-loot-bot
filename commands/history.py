@@ -33,7 +33,7 @@ def setup(bot):
         )
         
         for entry in recent:
-            timestamp = datetime.datetime.fromisoformat(entry["timestamp"])
+            timestamp = datetime.datetime.fromisoformat(entry["timestamp"]).astimezone(datetime.timezone(datetime.timedelta(hours=8)))
             date_str = timestamp.strftime("%Y-%m-%d %H:%M")
             winner_name = winner_names[entry['user_id']]
             type_emoji = "✅" if entry["event"] == "win" else "🎁"
