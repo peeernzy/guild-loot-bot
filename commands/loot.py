@@ -1,6 +1,6 @@
 import discord, asyncio, datetime, json, random
 import os
-from .utils import can_spend, spend_points, weekly_spent, remaining_claims, add_points
+from .utils import can_spend, spend_points, remaining_claims
 from .logger import log_event
 
 claims = {}
@@ -15,7 +15,7 @@ def format_time_left(seconds: float) -> str:
     s = int(seconds % 60)
     return f"{h:02d}h:{m:02d}m:{s:02d}s"
 
-# Load loot items from JSON file
+# Load loot items
 def load_loot_items():
     try:
         with open("loot_items.json", "r", encoding="utf-8") as f:
@@ -35,10 +35,7 @@ def load_loot_items():
                 rule = item["rule"]
                 normalized_aliases = [str(alias).strip().lower() for alias in item.get("aliases", []) if str(alias).strip()]
 
-                costs[name] = {
-                    "cost": item["cost"],
-                    "rule": rule
-                }
+                costs[name] = {"cost": item["cost"], "rule": rule}
 
                 is_bidding = str(rule).startswith("Bidding")
                 scoped_code = str(bid_index if is_bidding else claim_index)
@@ -62,11 +59,10 @@ def load_loot_items():
 
             return costs, claim_aliases, bid_aliases, item_meta
     except FileNotFoundError:
-        print("❌ loot_items.json not found. Using fallback defaults.")
+        print("❌ loot_items.json not found.")
         return {}, {}, {}, {}
 
 loot_costs, claim_aliases, bid_aliases, loot_meta = load_loot_items()
-
 
 def reload_loot_items():
     global loot_costs, claim_aliases, bid_aliases, loot_meta
@@ -79,160 +75,110 @@ def reload_loot_items():
     bid_aliases.update(new_bid_aliases)
     loot_meta.clear()
     loot_meta.update(new_meta)
-    return loot_costs, claim_aliases, bid_aliases, loot_meta
 
 CHANNEL_ID = int(os.getenv('LOOT_CHANNEL_ID', '1485956297227763752'))
 
-# =========================
-# BACKGROUND TASK
-# =========================
 async def check_claims(bot):
     await bot.wait_until_ready()
     while not bot.is_closed():
         now = datetime.datetime.now()
         channel = bot.get_channel(CHANNEL_ID)
-
         if not channel:
             await asyncio.sleep(60)
             continue
 
-        # ===== FIXED CLAIMS =====
+        # Claims
         for item, data in list(claims.items()):
             if (now - data["timestamp"]).total_seconds() >= 86400:
                 if data["players"]:
-                    winner_id = random.choice(list(data["players"]))
-                    guild = channel.guild
-                    winner = await guild.fetch_member(winner_id)
+                    winner_id = random.choice(data["players"])
+                    winner = await channel.guild.fetch_member(winner_id)
                     cost = loot_costs.get(item, {"cost": 0})["cost"]
 
                     if not can_spend(winner_id, cost, item):
                         await channel.send(f"⚠️ {winner.display_name} cannot afford {item}.")
-                        del claims[item]
-                        continue
-
-                    spend_points(winner_id, cost, item)
-                    leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
-                    log_event("win", winner_id, item, cost)
-
-                    await channel.send(f"🎉 {winner.display_name} won {item}! (-{cost} pts)")
-
+                    else:
+                        spend_points(winner_id, cost, item)
+                        leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
+                        log_event("win", winner_id, item, cost)
+                        await channel.send(f"🎉 {winner.display_name} won {item}! (-{cost} pts)")
                 del claims[item]
 
-        # ===== BIDDING =====
+        # Bids
         for item, bid_data in list(bids.items()):
             if (now - bid_data["timestamp"]).total_seconds() >= 86400:
                 if bid_data["players"]:
                     top_bid = max(bid_data["players"].values())
                     top_bidders = [pid for pid, amt in bid_data["players"].items() if amt == top_bid]
                     winner_id = random.choice(top_bidders)
-
                     winning_bid = bid_data["players"][winner_id]
-
-                    guild = channel.guild
-                    winner = await guild.fetch_member(winner_id)
+                    winner = await channel.guild.fetch_member(winner_id)
 
                     if can_spend(winner_id, winning_bid, item):
                         spend_points(winner_id, winning_bid, item)
                         leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
                         log_event("win", winner_id, item, winning_bid)
-
-                        await channel.send(
-                            f"🎉 {winner.display_name} won {item} with {winning_bid} pts!"
-                        )
+                        await channel.send(f"🎉 {winner.display_name} won {item} with {winning_bid} pts!")
                     else:
-                        await channel.send(
-                            f"⚠️ {winner.display_name} couldn't afford their bid."
-                        )
-
+                        await channel.send(f"⚠️ {winner.display_name} couldn't afford their bid.")
                 del bids[item]
 
         await asyncio.sleep(60)
 
-# =========================
-# SETUP COMMANDS
-# =========================
 def setup(bot):
 
-
-    # ===== VIEW CLAIMS LEADERBOARD =====
     @bot.tree.command(name="claimsleaderboard", description="View active item claims")
     async def claims_leaderboard_cmd(interaction: discord.Interaction):
         if not claims:
             await interaction.response.send_message("📋 No active claims.")
             return
 
-        embed = discord.Embed(
-            title="📋 Current Claims",
-            description="Items waiting for manual distribution",
-            color=discord.Color.blue()
-        )
-
+        embed = discord.Embed(title="📋 Current Claims", description="Items waiting for manual distribution", color=discord.Color.blue())
         now = datetime.datetime.now()
         for item, data in sorted(claims.items()):
-            player_list = []
-            for player_id in data["players"]:
-                member = interaction.guild.get_member(player_id)
-                if member:
-                    player_list.append(f"• {member.display_name}")
-            
+            player_list = [interaction.guild.get_member(pid).display_name for pid in data["players"] if interaction.guild.get_member(pid)]
             if player_list:
                 cost = loot_costs.get(item, {}).get("cost", 0)
                 time_left = 86400 - (now - data["timestamp"]).total_seconds()
-                timer = format_time_left(time_left)
                 embed.add_field(
                     name=f"{item} ({cost} pts)",
-                    value="\n".join(player_list) + f"\n\n⏰ {timer}",
+                    value="\n".join(f"• {name}" for name in player_list) + f"\n\n⏰ {format_time_left(time_left)}",
                     inline=False
                 )
-
         await interaction.response.send_message(embed=embed)
 
-    # ===== VIEW BIDS LEADERBOARD =====
     @bot.tree.command(name="bidsleaderboard", description="View active bids")
     async def bids_leaderboard_cmd(interaction: discord.Interaction):
         if not bids:
             await interaction.response.send_message("🏆 No active bids.")
             return
 
-        embed = discord.Embed(
-            title="🏆 Current Bids",
-            description="Bidding items with highest bids",
-            color=discord.Color.gold()
-        )
-
+        embed = discord.Embed(title="🏆 Current Bids", description="Bidding items with highest bids", color=discord.Color.gold())
         now = datetime.datetime.now()
         for item, bid_data in sorted(bids.items()):
             if bid_data["players"]:
-                # Get highest bid
                 highest_bidder_id = max(bid_data["players"], key=bid_data["players"].get)
-                highest_member = interaction.guild.get_member(highest_bidder_id)
                 highest_bid = bid_data["players"][highest_bidder_id]
-                
                 bid_list = []
                 for player_id, amount in sorted(bid_data["players"].items(), key=lambda x: x[1], reverse=True):
                     member = interaction.guild.get_member(player_id)
                     if member:
                         marker = "👑" if player_id == highest_bidder_id else "  "
                         bid_list.append(f"{marker} {member.display_name}: {amount} pts")
-                
                 time_left = 86400 - (now - bid_data["timestamp"]).total_seconds()
-                timer = format_time_left(time_left)
                 embed.add_field(
                     name=f"{item}",
-                    value="\n".join(bid_list) + f"\n\n⏰ {timer}",
+                    value="\n".join(bid_list) + f"\n\n⏰ {format_time_left(time_left)}",
                     inline=False
                 )
-
         await interaction.response.send_message(embed=embed)
 
-    # ===== END BID =====
     @bot.tree.command(name="endbid", description="Close bidding for an item")
     async def end_bidding_cmd(interaction: discord.Interaction, item: str):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        # Find the item
         target_item = None
         item_lookup = item.lower()
         for alias_map in (bid_aliases, claim_aliases):
@@ -244,59 +190,38 @@ def setup(bot):
                 break
 
         if not target_item or target_item not in bids:
-            await interaction.response.send_message(
-                f"❌ Item '{item}' not found in active bids.\nUse `/bidsleaderboard` to see options.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ Item '{item}' not found in active bids. Use `/bidsleaderboard`.", ephemeral=True)
             return
 
-        # Get highest bidder
         if not bids[target_item]["players"]:
-            await interaction.response.send_message(
-                f"❌ No bids on {target_item}.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ No bids on {target_item}.", ephemeral=True)
             return
 
         winner_id = max(bids[target_item]["players"], key=bids[target_item]["players"].get)
         winning_bid = bids[target_item]["players"][winner_id]
         winner = interaction.guild.get_member(winner_id)
 
-        # Award the bid
         if not can_spend(winner_id, winning_bid, target_item):
-            await interaction.response.send_message(
-                f"❌ {winner.display_name} cannot afford their bid ({winning_bid} pts).",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ {winner.display_name} cannot afford their bid ({winning_bid} pts).", ephemeral=True)
             return
 
         spend_points(winner_id, winning_bid, target_item)
         leaderboard[winner_id] = leaderboard.get(winner_id, 0) + 1
         log_event("win", winner_id, target_item, winning_bid)
-
-        # Remove from bids
         del bids[target_item]
 
-        # Announce to channel
         channel = interaction.guild.get_channel(CHANNEL_ID)
         if channel:
-            await channel.send(
-                f"🎉 **Bidding Ended!** {winner.display_name} won **{target_item}** with a bid of {winning_bid} pts!"
-            )
+            await channel.send(f"🎉 **Bidding Ended!** {winner.display_name} won **{target_item}** with {winning_bid} pts!")
 
-        await interaction.response.send_message(
-            f"✅ Bidding ended. {winner.display_name} won {target_item}!",
-            ephemeral=True
-        )
+        await interaction.response.send_message(f"✅ Bidding ended. {winner.display_name} won {target_item}!", ephemeral=True)
 
-    # ===== AWARD =====
     @bot.tree.command(name="award", description="Award an item to a member")
     async def award_cmd(interaction: discord.Interaction, item: str, member: discord.Member):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
             await interaction.response.send_message("❌ No permission.", ephemeral=True)
             return
 
-        # Find the item
         target_item = None
         item_lookup = item.lower()
         for alias_map in (claim_aliases, bid_aliases):
@@ -308,44 +233,29 @@ def setup(bot):
                 break
 
         if not target_item or target_item not in claims:
-            await interaction.response.send_message(
-                f"❌ Item '{item}' not found in active claims.\nUse `/claimsleaderboard` to see options.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ Item '{item}' not found in active claims. Use `/claimsleaderboard`.", ephemeral=True)
             return
 
-        # Check if member claimed this item
         if member.id not in claims[target_item]["players"]:
-            await interaction.response.send_message(
-                f"❌ {member.display_name} did not claim {target_item}.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ {member.display_name} did not claim {target_item}.", ephemeral=True)
             return
 
-        # Award the item
         cost = loot_costs.get(target_item, {"cost": 0})["cost"]
 
         if not can_spend(member.id, cost, target_item):
-            await interaction.response.send_message(
-                f"❌ {member.display_name} cannot afford {target_item}.",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ {member.display_name} cannot afford {target_item}.", ephemeral=True)
             return
 
         spend_points(member.id, cost, target_item)
         leaderboard[member.id] = leaderboard.get(member.id, 0) + 1
         log_event("award", member.id, target_item, cost)
 
-        # Remove from claims
         claims[target_item]["players"].remove(member.id)
         if not claims[target_item]["players"]:
             del claims[target_item]
 
-        await interaction.response.send_message(
-            f"✅ {member.display_name} awarded **{target_item}** (-{cost} pts)"
-        )
+        await interaction.response.send_message(f"✅ {member.display_name} awarded **{target_item}** (-{cost} pts)")
 
-    # ===== CLEAR EXPIRED CLAIMS =====
     @bot.tree.command(name="clearclaims", description="Clear expired claims")
     async def clear_claims_cmd(interaction: discord.Interaction):
         if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
@@ -362,58 +272,10 @@ def setup(bot):
                 del claims[item]
 
         if cleared:
-            await interaction.response.send_message(
-                f"✅ Cleared {len(cleared)} expired claims:\n" + "\n".join(cleared),
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"✅ Cleared {len(cleared)} expired claims:\n" + "\n".join(cleared), ephemeral=True)
         else:
             await interaction.response.send_message("✅ No expired claims to clear.", ephemeral=True)
 
-    # ===== GRANT =====
-    @bot.tree.command(name="grantitem", description="Grant a loot item")
-    async def grant_cmd(interaction: discord.Interaction, member: discord.Member, code: str, cost: int = None):
-        if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
-            await interaction.response.send_message("❌ No permission.", ephemeral=True)
-            return
-
-        lookup = str(code).strip().lower()
-        item = claim_aliases.get(lookup) or bid_aliases.get(lookup)
-        if not item:
-            await interaction.response.send_message("❌ Invalid code.", ephemeral=True)
-            return
-
-        base_cost = loot_costs[item]["cost"]
-        final_cost = cost if cost is not None else base_cost
-
-        if not can_spend(member.id, final_cost, item):
-            await interaction.response.send_message("❌ Cannot afford.", ephemeral=True)
-            return
-
-        spend_points(member.id, final_cost, item)
-        leaderboard[member.id] = leaderboard.get(member.id, 0) + 1
-        log_event("grant", member.id, item, final_cost)
-
-        await interaction.response.send_message(
-            f"✅ {member.display_name} got {item} (-{final_cost})"
-        )
-
-    # ===== REFUND =====
-    @bot.tree.command(name="refundpoints", description="Deduct points from a member")
-    async def refund_cmd(interaction: discord.Interaction, member: discord.Member, amount: int):
-        if not any(r.name in {"Moderator", "Elder"} for r in interaction.user.roles):
-            await interaction.response.send_message("❌ No permission.", ephemeral=True)
-            return
-
-        new_balance = spend_points(member.id, amount)
-        log_event("refund", member.id, "Points", amount)
-
-        await interaction.response.send_message(
-            f"✅ Deducted {amount} points from {member.display_name}.\n"
-            f"💰 New Balance: {new_balance}"
-        )
-
-
-    # ===== START TASK =====
     @bot.event
     async def on_ready():
         synced = await bot.tree.sync()

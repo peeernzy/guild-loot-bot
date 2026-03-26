@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # IMPORT COMMAND MODULES
 # =========================
 # Each module should only define its own commands
-from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, coins
+from commands import points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history
 
 # Register commands from each module
 points.setup(bot)
