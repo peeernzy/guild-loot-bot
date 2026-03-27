@@ -62,7 +62,9 @@ def setup(bot):
             remaining = remaining_claims(interaction.user.id, name)
             
             emoji = get_emoji(name, rarity)
-            alias = loot_meta[name].get("aliases", [loot_meta[name].get("source_code", "")])[0]
+            alias = loot_meta[name].get("aliases", []) 
+            alias = alias[0] if alias else loot_meta[name].get("source_code", name)
+
             rem_text = f" (Rem: {remaining})" if remaining is not None else ""
             
             line = f"{emoji} `{alias}` **{name}** | {cost}pts | Stock: {stock if stock < 999 else '∞'}{rem_text}"
