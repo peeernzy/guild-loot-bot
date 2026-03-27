@@ -7,13 +7,13 @@ import discord
 def _build_csv_rows(items: list[dict]) -> str:
     lines = ["code,name,cost,rule,stock,rarity"]
 
-    for item in items:
-        code = str(item.get("name", "")).replace('"', '""')  # Use name as code for dict key format
-        name = str(item.get("name", "")).replace('"', '""')
-        cost = str(item.get("cost", ""))
-        rule = str(item.get("rule", "")).replace('"', '""')
-        stock = str(item.get("stock", ""))
-        rarity = str(item.get("rarity", "")).replace('"', '""')
+    for name_key, details in items:
+        code = str(name_key).replace('"', '""')  # dict key as code
+        name = str(details.get("name", name_key)).replace('"', '""')
+        cost = str(details.get("cost", ""))
+        rule = str(details.get("rule", "")).replace('"', '""')
+        stock = str(details.get("stock", ""))
+        rarity = str(details.get("rarity", "")).replace('"', '""')
 
         lines.append(f'"{code}","{name}","{cost}","{rule}","{stock}","{rarity}"')
 
