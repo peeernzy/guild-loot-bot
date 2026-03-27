@@ -1,11 +1,13 @@
-# Ignore loot_items.json in git
+# Migrate loot_items to DB
 
-**Status: ✅ Complete**
+**Status: In Progress**
 
 ## Steps:
-1. [✅] Edit .gitignore to add `loot_items.json`
-2. [✅] Update TODO.md as complete
-3. [✅] Suggest git commit/push
-4. [✅] Task completion
-
-**Explanation:** This prevents git from tracking local loot data, so changes persist across restarts/clones/pulls. Code handles missing file gracefully.
+1. [✅] Create items table in logger.py initialize()
+2. [✅] Import current json to DB
+3. [ ] Replace load_loot_items() with DB query
+4. [ ] Update reloaditems/item_import to upsert DB
+5. [ ] Remove loot_items.json + git rm
+6. [ ] Update checkitemstore (no json count)
+7. [ ] Test /items /reloaditems /impitems
+8. [ ] Complete

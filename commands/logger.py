@@ -16,6 +16,15 @@ def initialize_history():
                         amount INTEGER
                     )
                 """)
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS items (
+                        name TEXT PRIMARY KEY,
+                        cost INTEGER NOT NULL,
+                        rule TEXT NOT NULL,
+                        stock INTEGER NOT NULL,
+                        rarity TEXT NOT NULL
+                    )
+                """)
             conn.commit()
     else:
         with get_sqlite_connection() as conn:
@@ -27,6 +36,15 @@ def initialize_history():
                     user_id TEXT NOT NULL,
                     item TEXT NOT NULL,
                     amount INTEGER
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS items (
+                    name TEXT PRIMARY KEY,
+                    cost INTEGER NOT NULL,
+                    rule TEXT NOT NULL,
+                    stock INTEGER NOT NULL,
+                    rarity TEXT NOT NULL
                 )
             """)
             conn.commit()
