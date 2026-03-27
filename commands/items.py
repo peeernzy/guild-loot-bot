@@ -3,6 +3,36 @@ from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
 from .utils import get_points, remaining_claims
 
+def truncate_table(lines: list[str], header_title: str, max_len: int = 1010) -> str:
+    """Build code block table with custom header, truncating to fit max_len chars."""
+    if not lines:
+        return ""
+    
+    header = f"```\n{header_title}\n"
+    footer = "\n```"
+    reserve = len(header) + len(footer) + 30  # buffer for truncation text
+    available = max_len - reserve
+    
+    table_lines = []
+    current_len = 0
+    line_idx = 0
+    
+    while line_idx < len(lines):
+        line = lines[line_idx]
+        test_len = current_len + len(line) + 1  # +"\n"
+        if test_len > available and table_lines:
+            break
+        table_lines.append(line)
+        current_len = test_len
+        line_idx += 1
+    
+    result = header + "\n".join(table_lines)
+    if line_idx < len(lines):
+        truncated_count = len(lines) - line_idx
+        result += f"\n... +{truncated_count} more"
+    result += footer
+    return result
+
 def setup(bot):
     @app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
     @bot.tree.command(name="items", description="Loot shop - fancy view by filter")
@@ -42,13 +72,14 @@ def setup(bot):
             else:
                 claim_lines.append(line)
 
-        # Claim table
-        if claim_lines:
-            claim_table = "```\nCLAIM ITEMS\n" + "\n".join(claim_lines[:20]) + ( "\n... +more" if len(claim_lines) > 20 else "") + "\n```"
+        # Claim table - dynamically truncate to fit Discord limit
+        claim_table = truncate_table(claim_lines, "CLAIM ITEMS")
+        if claim_table.strip():
             embed.add_field(name="✅ Claim", value=claim_table, inline=False)
-        # Bid table
-        if bid_lines:
-            bid_table = "```\nBID ITEMS ( /bid [alias] [pts] )\n" + "\n".join(bid_lines[:20]) + ( "\n... +more" if len(bid_lines) > 20 else "") + "\n```"
+
+        # Bid table - dynamically truncate to fit Discord limit  
+        bid_table = truncate_table(bid_lines, "BID ITEMS ( /bid [alias] [pts] )")
+        if bid_table.strip():
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
@@ -66,7 +97,7 @@ def setup(bot):
         for name in sorted(loot_meta):
             code = loot_meta[name]["source_code"]
             cost = loot_costs[name]["cost"]
-            rule = loot_costs[name]["rule"][:5]
+            rule = loot_meta[name]["rule"][:5]
             stock = loot_meta[name]["stock"]
             rarity = loot_meta[name]["rarity"][:6]
             
