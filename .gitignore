@@ -4,3 +4,4 @@ __pycache__/
 data/
 points_data.json
 events.json
+loot_items.json
