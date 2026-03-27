@@ -53,7 +53,7 @@ def setup(bot):
         
         embed.add_field(
             name="⚙️ Admin Commands",
-            value="• `/addpoints @player [pts]` - Add points (Mod/Elder)\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [csv]` - Import items from CSV\n• `/expitems` - Export items to CSV",
+            value="• `/addpoints @player [pts]` - Add points (Mod/Elder)\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [upload CSV]` - Import loot items\n• `/expitems` - Export loot items CSV",
             inline=False
         )
         
@@ -84,7 +84,7 @@ def setup(bot):
             return
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="⚙️ Admin Commands", color=discord.Color.orange())
-        value = "• `/addpoints @player [pts]` - Add points\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [csv]` - Import from CSV\n• `/expitems` - Export to CSV\n• `/endbid [code]` - Close bids\n• `/award @player [item]` - Manual award\n• `/cls` - Clear channel\n• `/getids` - Export IDs\n• `/setpointlimit [pts]` - Weekly limit\n• `/clearclaims` - Clean claims\n• `/reset` - Reset data"
+        value = "• `/addpoints @player [pts]` - Add points\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [upload CSV]` - Import loot CSV\n• `/expitems` - Export loot CSV\n• `/endbid [code]` - Close bids\n• `/award @player [item]` - Manual award\n• `/cls` - Clear channel\n• `/getids` - Export IDs\n• `/setpointlimit [pts]` - Weekly limit\n• `/clearclaims` - Clean claims\n• `/reset` - Reset data"
         embed.add_field(name="", value=value, inline=False)
         embed.set_footer(text="Events: `/setevent` `/listevents` | Attendance: `/importattendance`")
         await interaction.followup.send(embed=embed)
