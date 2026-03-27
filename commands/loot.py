@@ -21,7 +21,7 @@ def load_loot_items():
     try:
         with open("loot_items.json", "r", encoding="utf-8") as f:
             data = json.load(f)
-            items = data.get("items", [])
+            items = list(data.items()) if isinstance(data, dict) else data.get("items", [])
 
             costs = {}
             claim_aliases = {}
@@ -32,19 +32,34 @@ def load_loot_items():
             bid_index = 1
 
             for item in items:
-                name = item["name"]
-                rule = item["rule"]
-                normalized_aliases = [str(alias).strip().lower() for alias in item.get("aliases", []) if str(alias).strip()]
+                if isinstance(item, tuple):
+                    name_key, details = item
+                    name = details.get("name", name_key)
+                    code = name_key
+                    cost = details.get("cost", 0)
+                    rule = details.get("rule", "")
+                    stock = details.get("stock", 999)
+                    rarity = details.get("rarity", "common")
+                    aliases = []
+                else:
+                    name = item["name"]
+                    code = item.get("code", "")
+                    cost = item["cost"]
+                    rule = item["rule"]
+                    stock = item.get("stock", 999)
+                    rarity = item.get("rarity", "common")
+                    aliases = item.get("aliases", [])
 
-                costs[name] = {"cost": item["cost"], "rule": rule}
+                normalized_aliases = [str(alias).strip().lower() for alias in aliases if str(alias).strip()]
+
+                costs[name] = {"cost": cost, "rule": rule}
 
                 is_bidding = str(rule).startswith("Bidding")
                 scoped_code = str(bid_index if is_bidding else claim_index)
-                stock = item.get("stock", 999)
                 item_meta[name] = {
-                    "source_code": str(item["code"]),
+                    "source_code": str(code),
                     "stock": stock,
-                    "rarity": item.get("rarity", "common"),
+                    "rarity": rarity,
                     "scoped_code": scoped_code,
                     "aliases": normalized_aliases,
                     "is_bidding": is_bidding,
