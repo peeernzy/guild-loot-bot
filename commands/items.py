@@ -5,109 +5,94 @@ from .utils import get_points, remaining_claims
 
 def setup(bot):
     @app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
-    @bot.tree.command(name="items", description="Show loot items by rarity or filter (fancy view)")
+    @bot.tree.command(name="items", description="Loot shop - fancy view by filter")
     async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()
 
         embed = discord.Embed(title="🎁 Loot Shop", color=discord.Color.gold())
         
-        claim_items = []
-        bid_items = []
+        claim_lines = []
+        bid_lines = []
 
-        # Filter logic
-        for name in loot_meta:
+        for name in sorted(loot_meta):
             rarity = loot_meta[name].get("rarity", "common")
+            
+            # Filter
+            if filter != "all":
+                if filter == "points" and loot_costs[name]["cost"] > user_pts:
+                    continue
+                if rarity != filter:
+                    continue
+            
             cost = loot_costs[name]["cost"]
             rule = loot_costs[name]["rule"]
-            
-            # Apply filters
-            if filter != "all":
-                if filter == "points" and cost > user_pts:
-                    continue
-                if filter == rarity:
-                    pass
-                else:
-                    continue
-            
+            stock = loot_meta[name]["stock"]
             is_bidding = loot_meta[name]["is_bidding"]
             remaining = remaining_claims(interaction.user.id, name)
-            extra = f"\n📊 Rem: {remaining}" if remaining is not None else ""
             
-            stock = loot_meta[name]["stock"]
-            stock_text = f"**Stock:** {stock}" if stock < 999 else "**Stock:** Unlimited"
+            emoji = get_emoji(name, rarity)
+            alias = loot_meta[name]["aliases"][0] if loot_meta[name]["aliases"] else loot_meta[name]["source_code"]
+            rem_text = f" (Rem: {remaining})" if remaining is not None else ""
             
-            aliases = loot_meta[name]["aliases"]
-            alias = aliases[0] if aliases else loot_meta[name]["source_code"]
-            field_name = f"{get_emoji(name, rarity)} [`{alias}`] {name}"
-            field_value = f"**Cost:** {cost} pts\n{stock_text}\n**Rule:** {rule}\n**Rarity:** {rarity.title()}{extra}"
+            line = f"{emoji} `{alias}` **{name}** | {cost}pts | {rule} | Stock: {stock if stock < 999 else '∞'}{rem_text}"
             
             if is_bidding:
-                bid_items.append((cost, field_name, field_value))
+                bid_lines.append(line)
             else:
-                claim_items.append((cost, field_name, field_value))
+                claim_lines.append(line)
 
-        # Sort & add claim items
-        for cost, name, value in sorted(claim_items):
-            embed.add_field(name=name, value=value, inline=True)
+        # Claim table
+        if claim_lines:
+            claim_table = "```\nCLAIM ITEMS\n" + "\n".join(claim_lines[:20]) + ( "\n... +more" if len(claim_lines) > 20 else "") + "\n```"
+            embed.add_field(name="✅ Claim", value=claim_table, inline=False)
+        # Bid table
+        if bid_lines:
+            bid_table = "```\nBID ITEMS ( /bid [alias] [pts] )\n" + "\n".join(bid_lines[:20]) + ( "\n... +more" if len(bid_lines) > 20 else "") + "\n```"
+            embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
+
+        embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
+        embed.set_footer(text="`/itemlist` plain | `/points` | `/restock [item] [qty]` | `/impitems` upload more")
         
-        # Sort & add bid items (high→low)
-        if bid_items:
-            embed.add_field(name="⚔️ BIDDING ITEMS", value="Use `/bid [alias] [pts]`", inline=False)
-            for cost, name, value in sorted(bid_items, reverse=True):
-                embed.add_field(name=name, value=value, inline=True)
-
-        if not claim_items and not bid_items:
-            embed.description = f"**No {filter} items found.**\nTry: common, uncommon, rare, legendary, points, all"
-        else:
-            embed.description = f"💰 **Your Points: {user_pts}**\n*Filter: {filter or 'all'}*"
-        
-        embed.set_footer(text="`/itemlist` table | /points | /restock")
-
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="itemlist", description="Simple table of all loot items (code, name, cost, rule, stock, rarity)")
+    @bot.tree.command(name="itemlist", description="All loot items table (code/name/cost/rule/stock/rarity)")
     async def itemlist_cmd(interaction: discord.Interaction):
-        embed = discord.Embed(title="📋 Loot Items Masterlist", color=discord.Color.blurple())
+        embed = discord.Embed(title="📋 Loot Masterlist", color=discord.Color.blurple())
         
-        claim_table = "```\nCODE  | NAME             | COST | RULE   | STOCK | RARITY\n"
-        bid_table = "```\nCODE  | NAME             | COST | RULE   | STOCK | RARITY\n"
-        
-        claim_count = 0
-        bid_count = 0
+        claim_lines = []
+        bid_lines = []
 
         for name in sorted(loot_meta):
             code = loot_meta[name]["source_code"]
             cost = loot_costs[name]["cost"]
-            rule = loot_costs[name]["rule"][:6]  # Shorten rule
+            rule = loot_costs[name]["rule"][:5]
             stock = loot_meta[name]["stock"]
-            rarity = loot_meta[name]["rarity"][:5]  # Shorten rarity
+            rarity = loot_meta[name]["rarity"][:6]
             
-            row = f"{code:4} | {name[:15]:15} | {cost:4} | {rule:6} | {stock:5} | {rarity}"
+            line = f"`{code}` | {name[:20]} | {cost} | {rule} | {stock} | {rarity}"
             
             if loot_meta[name]["is_bidding"]:
-                bid_table += row + "\n"
-                bid_count += 1
+                bid_lines.append(line)
             else:
-                claim_table += row + "\n"
-                claim_count += 1
+                claim_lines.append(line)
 
-        claim_table += "```"
-        bid_table += "```"
+        claim_table = "```\nCLAIM | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(claim_lines[:25]) + ( "\n... " + str(len(claim_lines)-25) + " more" if len(claim_lines) > 25 else "") + "\n```"
+        bid_table = "```\nBID | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ( "\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
 
-        embed.add_field(name=f"✅ Claim Items ({claim_count})", value=claim_table, inline=False)
-        if bid_count > 0:
-            embed.add_field(name=f"⚔️ Bid Items ({bid_count})", value=bid_table, inline=False)
-
-        embed.set_footer(text="Use `/items` for fancy view with emojis/stock info")
+        embed.add_field(name=f"✅ Claim ({len(claim_lines)})", value=claim_table, inline=False)
+        if bid_lines:
+            embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
+        
+        embed.set_footer(text="`/items` fancy | `/impitems` CSV upload | `/expitems` export")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
-    """Emoji by rarity/name"""
     emojis = {
         "common": "⚪",
         "uncommon": "🟢", 
         "rare": "🔵",
         "legendary": "🟣"
     }
-    return emojis.get(rarity, "❔")
+    return emojis.get(rarity, "❓")
+
