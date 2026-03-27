@@ -10,7 +10,9 @@ COMMAND_DETAILS = {
     "stock": "Check single item stock.",
     "restock": "Restock item stock (Mod/Elder).",
     "claim": "Claim an available loot item using its code.",
+    "claimcancel": "Cancel your claim (refund points).",
     "bid": "Place a bid on a loot item.",
+    "bidcancel": "Cancel your bid (refund points).",
     "claimsleaderboard": "View the current list of active loot claims.",
     "bidsleaderboard": "View the current bidding standings.",
     "history": "View recent winners history.",
@@ -46,7 +48,7 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-            value="• `/points` - Points balance\n• `/leaderboard` - Top players\n• `/items` - Fancy loot shop\n• `/itemlist` - Items table\n• `/stock [code]` - Item stock\n• `/claim [code]` - Claim\n• `/bid [code] [pts]` - Bid\n• `/history` - Winners\n• `/claimsleaderboard` - Claims\n• `/bidsleaderboard` - Bids",
+            value="• `/points` - Points balance\n• `/leaderboard` - Top players\n• `/items` - Fancy loot shop\n• `/itemlist` - Items table\n• `/stock [code]` - Item stock\n• `/claim [code]` | `/claimcancel [code]` - Claim/Cancel\n• `/bid [code] [pts]` | `/bidcancel [code]` - Bid/Cancel\n• `/history` - Winners\n• `/claimsleaderboard` - Claims\n• `/bidsleaderboard` - Bids",
             inline=False
         )
         
@@ -77,7 +79,7 @@ def setup(bot):
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
         embed.add_field(
             name="Loot & Points",
-            value="• `/points` • `/leaderboard` • `/items` • `/itemlist`\n• `/stock [code]` • `/claim [code]` • `/bid`\n• `/history` • `/transfer` • claims/bids leaderboards",
+            value="• `/points` • `/leaderboard` • `/items` • `/itemlist`\n• `/stock [code]` • `/claim` `/claimcancel` • `/bid` `/bidcancel`\n• `/history` • `/transfer` • claims/bids leaderboards",
             inline=False
         )
         await interaction.followup.send(embed=embed)

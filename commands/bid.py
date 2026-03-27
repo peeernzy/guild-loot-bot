@@ -42,7 +42,7 @@ def setup(bot):
         net_amount = max(0, amount - current_bid)
         
         if not can_spend(user_id, net_amount, item, is_bid=True):
-            await interaction.response.send_message("❌ Not enough points for this bid increase.")
+            await interaction.response.send_message("❌ Not enough points for bid increase.")
             return
 
         # Refund old bid first
@@ -79,3 +79,27 @@ def setup(bot):
         embed.set_footer(text=f"Current Points: {user_points}pts + (bidding {bidding_amount}pts)\nTotal Points: {user_points + bidding_amount} pts")
         
         await interaction.response.send_message(embed=embed)
+
+    @bot.tree.command(name="bidcancel", description="Cancel your bid on an item (refund points)")
+    async def bidcancel_cmd(interaction: discord.Interaction, code: str):
+        lookup = str(code).strip().lower()
+        item = bid_aliases.get(lookup) or claim_aliases.get(lookup)
+        if not item:
+            await interaction.response.send_message("❌ Invalid code. Use `/items` for list.", ephemeral=True)
+            return
+        if not loot_meta.get(item, {}).get("is_bidding", False):
+            await interaction.response.send_message(f"❌ {item} is not a bidding item.", ephemeral=True)
+            return
+        user_id = interaction.user.id
+        if item not in bids or user_id not in bids[item]["players"]:
+            await interaction.response.send_message(f"❌ No active bid on {item}.", ephemeral=True)
+            return
+        current_bid = bids[item]["players"][user_id]
+        add_points(user_id, current_bid)
+        del bids[item]["players"][user_id]
+        if not bids[item]["players"]:
+            del bids[item]
+        log_event("cancel_bid", user_id, item, current_bid)
+        print(f"[CANCELBID] Refunded {current_bid} pts to {user_id} for {item}")
+        remaining_players = len(bids.get(item, {'players': {}})['players']) if item in bids else 0
+        await interaction.response.send_message(f"✅ Bid on **{item}** cancelled! **+{current_bid} pts** refunded.\nPlayers left: {remaining_players}", ephemeral=True)
