@@ -83,7 +83,21 @@ def setup(bot):
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
-        embed.set_footer(text="`/itemlist` plain | `/points` | `/restock [item] [qty]` | `/impitems` upload more")
+        embed.set_footer(text="`/itemlist` plain | `/checkitemstore` | `/points` | `/restock [item] [qty]` | `/impitems` upload more")
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @bot.tree.command(name="checkitemstore", description="Check current item store status and count")
+    async def checkitemstore_cmd(interaction: discord.Interaction):
+        total_items = len(loot_meta)
+        claim_count = sum(1 for name in loot_meta if not loot_meta[name].get("is_bidding", False))
+        bid_count = total_items - claim_count
+        
+        embed = discord.Embed(title="🛒 Item Store Status", color=discord.Color.green())
+        embed.add_field(name="📊 Summary", value=f"**Total: {total_items}**\n**Claim: {claim_count}**\n**Bid: {bid_count}**", inline=False)
+        embed.add_field(name="📦 Data", value=f"**Loaded:** {len(loot_costs)} cost entries\n**File:** loot_items.json", inline=False)
+        embed.add_field(name="🔗 Commands", value="`/items [filter]` fancy\n`/itemlist` table", inline=False)
+        embed.set_footer(text="Reload with `/reloaditems` if needed")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -95,28 +109,28 @@ def setup(bot):
         bid_lines = []
 
         for name in sorted(loot_meta):
-            code = loot_meta[name]["source_code"]
-            cost = loot_costs[name]["cost"]
-            rule = loot_costs[name].get("rule", "")[:5]
-            stock = loot_meta[name]["stock"]
-            rarity = loot_meta[name]["rarity"][:6]
+            code = loot_meta[name].get("source_code", "N/A")
+            cost = loot_costs.get(name, {}).get("cost", 0)
+            rule = loot_costs.get(name, {}).get("rule", "")[:5]
+            stock = loot_meta[name].get("stock", 999)
+            rarity = loot_meta[name].get("rarity", "unknown")[:6]
+            is_bidding = loot_meta[name].get("is_bidding", False)
             
-            line = f"`{code}` | {name[:20]} | {cost} | {rule} | {stock} | {rarity}"
+            line = f"`{code}` | {name[:20]:<20} | {cost} | {rule:<5} | {stock} | {rarity}"
             
-            if loot_meta[name]["is_bidding"]:
+            if is_bidding:
                 bid_lines.append(line)
             else:
                 claim_lines.append(line)
 
-
-        claim_table = "```\nCLAIM | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(claim_lines[:25]) + ( "\n... " + str(len(claim_lines)-25) + " more" if len(claim_lines) > 25 else "") + "\n```"
-        bid_table = "```\nBID | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ( "\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
-
+        claim_table = "```\nCLAIM | CODE | NAME          | COST | RULE  | STOCK | RARITY\n" + "\n".join(claim_lines[:25]) + ("\n... " + str(len(claim_lines)-25) + " more" if len(claim_lines) > 25 else "") + "\n```"
         embed.add_field(name=f"✅ Claim ({len(claim_lines)})", value=claim_table, inline=False)
+        
         if bid_lines:
+            bid_table = "```\nBID   | CODE | NAME          | COST | RULE  | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ("\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
             embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
         
-        embed.set_footer(text="`/items` fancy | `/impitems` CSV upload | `/expitems` export")
+        embed.set_footer(text="`/items` fancy | `/checkitemstore` summary | `/impitems` upload | `/expitems` export")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
