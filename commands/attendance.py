@@ -36,18 +36,23 @@ def setup(bot):
             raw_event = row["event"].strip().lower()
             raw_outcome = row["outcome"].strip().lower()
 
-            # Support short numeric input for convenience:
-            # event: 1 -> clansanctuary, 2 -> sindrisisland
-            # outcome: 1 -> win/participated, 0 -> lose/absent
+            # Event aliases
             event_alias = {
                 "1": "clansanctuary",
                 "2": "sindrisisland",
                 "clansanctuary": "clansanctuary",
-                "sindrisisland": "sindrisisland"
+                "sindrisisland": "sindris island"
             }
+
+            # Outcome aliases (new codes + old)
             outcome_alias = {
-                "1": "win",          # default win for numbers
-                "0": "lose",         # default lose/absent for numbers
+                "1": "win",
+                "0": "lose",
+                "10": "participated",
+                "11": "absent",
+                "20": "participated",
+                "21": "lose",
+                "22": "absent",
                 "win": "win",
                 "lose": "lose",
                 "participated": "participated",
@@ -56,12 +61,6 @@ def setup(bot):
 
             event = event_alias.get(raw_event, raw_event)
             outcome = outcome_alias.get(raw_outcome, raw_outcome)
-
-            # if user provided numeric 0/1 for clan sanctuary outcome, map absent/participated
-            if raw_event == "1" and raw_outcome == "1":
-                outcome = "participated"
-            if raw_event == "1" and raw_outcome == "0":
-                outcome = "absent"
 
             # Lookup points from config
             points = EVENT_RULES.get(event, {}).get(outcome, 0)
@@ -88,7 +87,7 @@ def setup(bot):
         for event, outcomes in EVENT_RULES.items():
             lines.append(f"📌 **{event.capitalize()}**")
             for outcome, points in outcomes.items():
-                lines.append(f"   - {outcome}: {points} points")
+                lines.append(f"  ipel - {outcome}: {points} points")
 
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
@@ -117,3 +116,4 @@ def setup(bot):
             f"✅ Updated rule: **{event} → {outcome} = {points} points** (active immediately)",
             ephemeral=True
         )
+
