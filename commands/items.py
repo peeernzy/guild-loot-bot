@@ -1,4 +1,5 @@
 import discord
+import json
 from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
 from .utils import get_points, remaining_claims
@@ -83,21 +84,40 @@ def setup(bot):
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
-        embed.set_footer(text="`/itemlist` plain | `/checkitemstore` | `/points` | `/restock [item] [qty]` | `/impitems` upload more")
+        embed.set_footer(text="`/itemlist` plain | `/checkitemstore` JSON count | `/points` | `/restock` | `/impitems`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="checkitemstore", description="Check current item store status and count")
+    @bot.tree.command(name="checkitemstore", description="Check item store + JSON file item count")
     async def checkitemstore_cmd(interaction: discord.Interaction):
+        # Count raw JSON items
+        try:
+            with open("loot_items.json", "r", encoding="utf-8") as f:
+                raw_count = len(json.load(f))
+        except Exception:
+            raw_count = "Failed to read"
+        
         total_items = len(loot_meta)
         claim_count = sum(1 for name in loot_meta if not loot_meta[name].get("is_bidding", False))
         bid_count = total_items - claim_count
         
-        embed = discord.Embed(title="🛒 Item Store Status", color=discord.Color.green())
-        embed.add_field(name="📊 Summary", value=f"**Total: {total_items}**\n**Claim: {claim_count}**\n**Bid: {bid_count}**", inline=False)
-        embed.add_field(name="📦 Data", value=f"**Loaded:** {len(loot_costs)} cost entries\n**File:** loot_items.json", inline=False)
-        embed.add_field(name="🔗 Commands", value="`/items [filter]` fancy\n`/itemlist` table", inline=False)
-        embed.set_footer(text="Reload with `/reloaditems` if needed")
+        embed = discord.Embed(title="🛒 Item Store Check", color=discord.Color.green())
+        embed.add_field(
+            name="📊 Counts", 
+            value=f"**JSON file:** `{raw_count}` items\n**Loaded meta:** `{total_items}`\n**Claim:** `{claim_count}`\n**Bid:** `{bid_count}`", 
+            inline=False
+        )
+        embed.add_field(
+            name="📦 Status", 
+            value=f"**loot_costs:** `{len(loot_costs)}` entries", 
+            inline=True
+        )
+        embed.add_field(
+            name="Commands", 
+            value="`/items` fancy\n`/itemlist` table", 
+            inline=True
+        )
+        embed.set_footer(text="`/reloaditems` to refresh data")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -130,7 +150,7 @@ def setup(bot):
             bid_table = "```\nBID   | CODE | NAME          | COST | RULE  | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ("\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
             embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
         
-        embed.set_footer(text="`/items` fancy | `/checkitemstore` summary | `/impitems` upload | `/expitems` export")
+        embed.set_footer(text="`/items` fancy | `/checkitemstore` counts | `/impitems` | `/expitems`")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
