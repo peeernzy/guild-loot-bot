@@ -36,7 +36,7 @@ def truncate_table(lines: list[str], header_title: str, max_len: int = 1010) -> 
 
 def setup(bot):
     @app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
-    @bot.tree.command(name="items", description="Loot shop - fancy view by filter")
+    @bot.tree.command(name="items", description="Loot shop - fancy view by filter (no rule column)")
     async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()
@@ -51,40 +51,39 @@ def setup(bot):
             
             # Filter
             if filter != "all":
-                if filter == "points" and loot_costs[name]["cost"] > user_pts:
+                if filter == "points" and loot_costs.get(name, {}).get("cost", 0) > user_pts:
                     continue
                 if rarity != filter:
                     continue
             
-            cost = loot_costs[name]["cost"]
-            rule = loot_costs[name]["rule"]
-            stock = loot_meta[name]["stock"]
-            is_bidding = loot_meta[name]["is_bidding"]
+            cost = loot_costs.get(name, {}).get("cost", 0)
+            stock = loot_meta[name].get("stock", 999)
+            is_bidding = loot_meta[name].get("is_bidding", False)
             remaining = remaining_claims(interaction.user.id, name)
             
             emoji = get_emoji(name, rarity)
-            alias = loot_meta[name]["aliases"][0] if loot_meta[name]["aliases"] else loot_meta[name]["source_code"]
+            alias = loot_meta[name].get("aliases", [loot_meta[name].get("source_code", "")])[0]
             rem_text = f" (Rem: {remaining})" if remaining is not None else ""
             
-            line = f"{emoji} `{alias}` **{name}** | {cost}pts | {rule} | Stock: {stock if stock < 999 else '∞'}{rem_text}"
+            line = f"{emoji} `{alias}` **{name}** | {cost}pts | Stock: {stock if stock < 999 else '∞'}{rem_text}"
             
             if is_bidding:
                 bid_lines.append(line)
             else:
                 claim_lines.append(line)
 
-        # Claim table - dynamically truncate to fit Discord limit
+        # Claim table - dynamically truncate
         claim_table = truncate_table(claim_lines, "CLAIM ITEMS")
         if claim_table.strip():
             embed.add_field(name="✅ Claim", value=claim_table, inline=False)
 
-        # Bid table - dynamically truncate to fit Discord limit  
+        # Bid table - dynamically truncate
         bid_table = truncate_table(bid_lines, "BID ITEMS ( /bid [alias] [pts] )")
         if bid_table.strip():
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
-        embed.set_footer(text="`/itemlist` plain | `/checkitemstore` JSON count | `/points` | `/restock` | `/impitems`")
+        embed.set_footer(text="`/itemlist` table | `/checkitemstore` | `/points` | `/restock` | `/impitems`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -104,24 +103,24 @@ def setup(bot):
         embed = discord.Embed(title="🛒 Item Store Check", color=discord.Color.green())
         embed.add_field(
             name="📊 Counts", 
-            value=f"**JSON file:** `{raw_count}` items\n**Loaded meta:** `{total_items}`\n**Claim:** `{claim_count}`\n**Bid:** `{bid_count}`", 
+            value=f"**JSON file:** `{raw_count}` items\n**Loaded:** `{total_items}`\n**Claim:** `{claim_count}` **Bid:** `{bid_count}`", 
             inline=False
         )
         embed.add_field(
-            name="📦 Status", 
-            value=f"**loot_costs:** `{len(loot_costs)}` entries", 
+            name="Status", 
+            value=f"loot_costs: `{len(loot_costs)}`", 
             inline=True
         )
         embed.add_field(
             name="Commands", 
-            value="`/items` fancy\n`/itemlist` table", 
+            value="`/items` | `/itemlist`", 
             inline=True
         )
-        embed.set_footer(text="`/reloaditems` to refresh data")
+        embed.set_footer(text="Reload: `/reloaditems`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="itemlist", description="All loot items table (code/name/cost/rule/stock/rarity)")
+    @bot.tree.command(name="itemlist", description="Loot table (no rule column)")
     async def itemlist_cmd(interaction: discord.Interaction):
         embed = discord.Embed(title="📋 Loot Masterlist", color=discord.Color.blurple())
         
@@ -131,26 +130,26 @@ def setup(bot):
         for name in sorted(loot_meta):
             code = loot_meta[name].get("source_code", "N/A")
             cost = loot_costs.get(name, {}).get("cost", 0)
-            rule = loot_costs.get(name, {}).get("rule", "")[:5]
             stock = loot_meta[name].get("stock", 999)
             rarity = loot_meta[name].get("rarity", "unknown")[:6]
             is_bidding = loot_meta[name].get("is_bidding", False)
             
-            line = f"`{code}` | {name[:20]:<20} | {cost} | {rule:<5} | {stock} | {rarity}"
+            line = f"`{code}` **{name[:18]}** | {cost}pts | Stock:{stock} | {rarity}"
             
             if is_bidding:
                 bid_lines.append(line)
             else:
                 claim_lines.append(line)
 
-        claim_table = "```\nCLAIM | CODE | NAME          | COST | RULE  | STOCK | RARITY\n" + "\n".join(claim_lines[:25]) + ("\n... " + str(len(claim_lines)-25) + " more" if len(claim_lines) > 25 else "") + "\n```"
-        embed.add_field(name=f"✅ Claim ({len(claim_lines)})", value=claim_table, inline=False)
+        if claim_lines:
+            claim_table = truncate_table(claim_lines, "CLAIM | CODE | NAME | COST | STOCK | RARITY")
+            embed.add_field(name=f"✅ Claim ({len(claim_lines)})", value=claim_table, inline=False)
         
         if bid_lines:
-            bid_table = "```\nBID   | CODE | NAME          | COST | RULE  | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ("\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
+            bid_table = truncate_table(bid_lines, "BID | CODE | NAME | COST | STOCK | RARITY")
             embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
         
-        embed.set_footer(text="`/items` fancy | `/checkitemstore` counts | `/impitems` | `/expitems`")
+        embed.set_footer(text="`/items` fancy | `/checkitemstore` | `/impitems` CSV | `/expitems` export")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
