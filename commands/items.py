@@ -59,15 +59,12 @@ def setup(bot):
             cost = loot_costs.get(name, {}).get("cost", 0)
             stock = loot_meta[name].get("stock", 999)
             is_bidding = loot_meta[name].get("is_bidding", False)
-            remaining = remaining_claims(interaction.user.id, name)
-            
             emoji = get_emoji(name, rarity)
             alias = loot_meta[name].get("aliases", []) 
             alias = alias[0] if alias else loot_meta[name].get("source_code", name)
-
-            rem_text = f" (Rem: {remaining})" if remaining is not None else ""
             
-            line = f"{emoji} `{alias}` **{name}** | {cost}pts | Stock: {stock if stock < 999 else '∞'}{rem_text}"
+            line = f"{emoji} `{alias}` **{name}** | {cost}pts | Stock: {stock if stock < 999 else '∞'}"
+
             
             if is_bidding:
                 bid_lines.append(line)

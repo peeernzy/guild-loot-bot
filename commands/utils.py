@@ -42,17 +42,10 @@ def can_spend(member_id: int, amount: int, item: str = None, is_bid: bool = Fals
 
     if item:
         count = item_record["items"].get(item, 0)
-
-        if item == "Middle Horn" and count >= 2:
-            return False
-
-        if item == "Lesser Horn" and count >= 2:
-            return False
-
-        if item == "Silvarin (Bundle)" and count >= 1:
-            return False
+        # Removed hardcoded item limits
 
     return True
+
 
 # =========================
 # SPEND POINTS
@@ -89,21 +82,6 @@ def add_points(member_id: int, amount: int):
 # REMAINING CLAIMS
 # =========================
 def remaining_claims(member_id: int, item: str) -> int:
-    current_week = _current_week()
-
-    item_record = weekly_item_claims.get(member_id, {"week": current_week, "items": {}})
-    if item_record["week"] != current_week:
-        item_record = {"week": current_week, "items": {}}
-
-    count = item_record["items"].get(item, 0)
-
-    if item == "Middle Horn":
-        return max(0, 2 - count)
-
-    if item == "Lesser Horn":
-        return max(0, 2 - count)
-
-    if item == "Silvarin (Bundle)":
-        return max(0, 1 - count)
-
+    # Removed max per week limits - unlimited
     return None
+
