@@ -10,7 +10,7 @@ from .loot import bids, claims, reload_loot_items
 
 LOOT_ITEMS_FILE = Path("loot_items.json")
 BACKUP_DIR = Path("backups")
-REQUIRED_COLUMNS = {"code", "name", "cost", "rule", "aliases", "outcome"}  # outcome required
+REQUIRED_COLUMNS = {"code", "name", "cost", "rule", "aliases", "outcome", "stock"}  # outcome required
 
 
 def _normalize_aliases(raw_value: str) -> list[str]:
@@ -43,6 +43,7 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
         cost_text = (row.get("cost") or "").strip()
         rule = (row.get("rule") or "").strip()
         aliases = _normalize_aliases((row.get("aliases") or "").strip())
+        stock_text = (row.get("stock") or "999").strip()
 
         # outcome handling
         try:
@@ -52,7 +53,7 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
         points = _calculate_points(outcome)
 
         if not code or not name or not cost_text or not rule:
-            errors.append(f"Row {index}: code, name, cost, and rule are required.")
+            errors.append(f"Row {index}: code, name, cost, rule required.")
             continue
 
         try:
@@ -60,7 +61,15 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
             if cost < 0:
                 raise ValueError
         except ValueError:
-            errors.append(f"Row {index}: cost must be a valid non-negative integer.")
+            errors.append(f"Row {index}: cost valid non-negative integer.")
+            continue
+
+        try:
+            stock = int(stock_text)
+            if stock < 0:
+                raise ValueError
+        except ValueError:
+            errors.append(f"Row {index}: stock valid non-negative integer (default 999).")
             continue
 
         code_key = code.lower()
@@ -97,9 +106,10 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
                 "name": name,
                 "cost": cost,
                 "rule": rule,
+                "stock": stock,
                 "aliases": aliases,
                 "outcome": outcome,
-                "points": points,   # store calculated points
+                "points": points,   
             }
         )
 

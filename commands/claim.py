@@ -6,7 +6,6 @@ from .loot import claim_aliases, bid_aliases, loot_meta, claims, loot_costs
 from .logger import log_event
 from .utils import can_spend, remaining_claims
 
-
 def setup(bot):
     @bot.tree.command(name="claim", description="Claim a loot item")
     async def claim_cmd(interaction: discord.Interaction, code: str):
@@ -17,6 +16,10 @@ def setup(bot):
             return
         if loot_meta.get(item, {}).get("is_bidding", False):
             await interaction.response.send_message(f"❌ {item} is bidding-only. Use `/bid {lookup}`.")
+            return
+        stock = loot_meta.get(item, {}).get("stock", 999)
+        if stock <= 0:
+            await interaction.response.send_message(f"❌ **{item}** sold out (0 stock left).")
             return
         user_id = interaction.user.id
         cost = loot_costs[item]["cost"]

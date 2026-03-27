@@ -40,9 +40,10 @@ def load_loot_items():
 
                 is_bidding = str(rule).startswith("Bidding")
                 scoped_code = str(bid_index if is_bidding else claim_index)
-
+                stock = item.get("stock", 999)
                 item_meta[name] = {
                     "source_code": str(item["code"]),
+                    "stock": stock,
                     "scoped_code": scoped_code,
                     "aliases": normalized_aliases,
                     "is_bidding": is_bidding,

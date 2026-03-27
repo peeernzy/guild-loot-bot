@@ -7,7 +7,6 @@ from .logger import log_event
 from .utils import can_spend, spend_points, add_points, get_points
 from .loot import format_time_left
 
-
 def setup(bot):
     @bot.tree.command(name="bid", description="Place a bid on an item")
     async def bid_cmd(interaction: discord.Interaction, code: str, amount: int):
@@ -15,6 +14,10 @@ def setup(bot):
         item = bid_aliases.get(lookup) or claim_aliases.get(lookup)
         if not item:
             await interaction.response.send_message("❌ Invalid bidding code. Use `/items` for list.")
+            return
+        stock = loot_meta.get(item, {}).get("stock", 999)
+        if stock <= 0:
+            await interaction.response.send_message(f"❌ **{item}** sold out (0 stock left).")
             return
         if not loot_meta.get(item, {}).get("is_bidding", False):
             await interaction.response.send_message(f"❌ {item} cannot be bid on. Use `/claim {lookup}`.")

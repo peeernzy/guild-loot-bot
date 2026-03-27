@@ -52,9 +52,12 @@ def setup(bot):
 
                 remaining = remaining_claims(user_id, name)
                 extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
+                
+                stock = loot_meta.get(name, {}).get("stock", 999)
+                stock_text = f"**Stock:** {stock} left" if stock < 999 else "**Stock:** Unlimited"
 
                 source_code = loot_meta.get(name, {}).get("source_code", code)
-                field_value = f"**Cost:** {points} {pt_str}\n**Rule:** {rule}{extra}"
+                field_value = f"**Cost:** {points} {pt_str}\n{stock_text}\n**Rule:** {rule}{extra}"
 
                 if is_bidding:
                     bid_items.append((emoji, code, name, field_value, points))
