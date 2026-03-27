@@ -97,7 +97,7 @@ def setup(bot):
         for name in sorted(loot_meta):
             code = loot_meta[name]["source_code"]
             cost = loot_costs[name]["cost"]
-            rule = loot_meta[name]["rule"][:5]
+            rule = loot_costs[name].get("rule", "")[:5]
             stock = loot_meta[name]["stock"]
             rarity = loot_meta[name]["rarity"][:6]
             
@@ -107,6 +107,7 @@ def setup(bot):
                 bid_lines.append(line)
             else:
                 claim_lines.append(line)
+
 
         claim_table = "```\nCLAIM | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(claim_lines[:25]) + ( "\n... " + str(len(claim_lines)-25) + " more" if len(claim_lines) > 25 else "") + "\n```"
         bid_table = "```\nBID | CODE | NAME | COST | RULE | STOCK | RARITY\n" + "\n".join(bid_lines[:25]) + ( "\n... " + str(len(bid_lines)-25) + " more" if len(bid_lines) > 25 else "") + "\n```"
