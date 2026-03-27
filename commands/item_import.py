@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 import discord
+from discord import app_commands
 
 from .loot import bids, claims, reload_loot_items
 
@@ -63,7 +64,7 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
             continue
 
         seen_codes.add(code_key)
-        seen_names.add(name_key)
+        seen_names.add(code_key)
 
         parsed_items.append({
             "code": code,
@@ -111,7 +112,8 @@ def _save_loot_items(items: list[dict]):
 
 def setup(bot):
     @bot.tree.command(name="impitems", description="Import loot items from CSV (code,name,cost,rule,stock,rarity)")
-    async def import_items_cmd(interaction: discord.Interaction, file: discord.Attachment):
+    @app_commands.describe(force="Ignore active claim/bid warnings")
+    async def import_items_cmd(interaction: discord.Interaction, file: discord.Attachment, force: bool = False):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
 
@@ -120,7 +122,7 @@ def setup(bot):
             return
 
         if not file.filename.lower().endswith(".csv"):
-            await interaction.response.send_message("❌ Upload CSV.", ephemeral=True)
+            await interaction.response.send_message("❌ Upload CSV file.", ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True)
@@ -138,20 +140,19 @@ def setup(bot):
         items, errors = _validate_rows(rows)
 
         if errors:
-            await interaction.followup.send("❌ " + "\n".join(errors[:10]), ephemeral=True)
+            await interaction.followup.send("❌ Validation errors:\n" + "\n".join(errors[:10]), ephemeral=True)
             return
 
         warnings = _find_unsafe_changes(items)
-        if warnings:
-            await interaction.followup.send("\n".join(warnings) + "\n\nContinue? Reply 'force-import'.", ephemeral=True)
+        if warnings and not force:
+            await interaction.followup.send("\n".join(warnings) + "\n\n**Use `force: true` to override.**", ephemeral=True)
             return
 
         backup_path = _backup_current_loot_file()
         _save_loot_items(items)
         reload_loot_items()
 
-        backup_text = f"\n🗂️ Backup: `{backup_path.name}`" if backup_path else ''
-        await interaction.followup.send(
-            f"✅ **{len(items)}** items imported from `{file.filename}`{backup_text}\n🔄 Reloaded live.",
-            ephemeral=True
-        )
+        backup_text = f"\n🗂️ Backup saved: `{backup_path.name}`" if backup_path else ""
+        msg = f"✅ **{len(items)}** items imported from `{file.filename}`{backup_text}"
+        msg += "\n🔄 Reloaded – use `/items` to verify."
+        await interaction.followup.send(msg, ephemeral=True)
