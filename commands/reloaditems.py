@@ -4,7 +4,7 @@ from .loot import reload_loot_items, loot_meta, loot_costs, claim_aliases, bid_a
 
 def setup(bot):
     @app_commands.describe()
-    @bot.tree.command(name="reloaditems", description="Reload loot items from JSON file (sync command)")
+    @bot.tree.command(name="reloaditems", description="Reload loot items from DB (sync command)")
     async def reloaditems_cmd(interaction: discord.Interaction):
         old_total = len(loot_meta)
         reload_loot_items()

@@ -17,73 +17,10 @@ def format_time_left(seconds: float) -> str:
     return f"{h:02d}h:{m:02d}m:{s:02d}s"
 
 # Load loot items
+from .items_db import load_loot_items_from_db
+
 def load_loot_items():
-    try:
-        with open("loot_items.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, dict):
-                items = list(data.items())
-            elif isinstance(data, list):
-                items = data
-            else:
-                items = []
-
-            costs = {}
-            claim_aliases = {}
-            bid_aliases = {}
-            item_meta = {}
-
-            claim_index = 1
-            bid_index = 1
-
-            for item in items:
-                if isinstance(item, tuple):
-                    name_key, details = item
-                    name = details.get("name", name_key)
-                    code = name_key
-                    cost = details.get("cost", 0)
-                    rule = details.get("rule", "")
-                    stock = details.get("stock", 999)
-                    rarity = details.get("rarity", "common")
-                    aliases = []
-                else:
-                    name = item["name"]
-                    code = item.get("code", "")
-                    cost = item["cost"]
-                    rule = item["rule"]
-                    stock = item.get("stock", 999)
-                    rarity = item.get("rarity", "common")
-                    aliases = item.get("aliases", [])
-
-                normalized_aliases = [str(alias).strip().lower() for alias in aliases if str(alias).strip()]
-
-                costs[name] = {"cost": cost, "rule": rule}
-
-                is_bidding = str(rule).startswith("Bidding")
-                scoped_code = str(bid_index if is_bidding else claim_index)
-                item_meta[name] = {
-                    "source_code": str(code),
-                    "stock": stock,
-                    "rarity": rarity,
-                    "scoped_code": scoped_code,
-                    "aliases": normalized_aliases,
-                    "is_bidding": is_bidding,
-                }
-
-                target_aliases = bid_aliases if is_bidding else claim_aliases
-                target_aliases[scoped_code] = name
-                for alias in normalized_aliases:
-                    target_aliases[alias] = name
-
-                if is_bidding:
-                    bid_index += 1
-                else:
-                    claim_index += 1
-
-            return costs, claim_aliases, bid_aliases, item_meta
-    except FileNotFoundError:
-        print("❌ loot_items.json not found.")
-        return {}, {}, {}, {}
+    return load_loot_items_from_db()
 
 loot_costs, claim_aliases, bid_aliases, loot_meta = load_loot_items()
 
