@@ -44,6 +44,7 @@ def load_loot_items():
                 item_meta[name] = {
                     "source_code": str(item["code"]),
                     "stock": stock,
+                    "rarity": item.get("rarity", "common"),
                     "scoped_code": scoped_code,
                     "aliases": normalized_aliases,
                     "is_bidding": is_bidding,

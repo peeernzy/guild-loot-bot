@@ -1,120 +1,76 @@
 import discord
-from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
-from .utils import remaining_claims
+from .utils import get_points, remaining_claims
 
 def setup(bot):
-    @bot.tree.command(name="items", description="Show loot codes and aliases")
-    async def items_cmd(interaction: discord.Interaction):
-        embed = discord.Embed(
-            title="🎁 Loot Shop",
-            description="Earn points from **Sindri's Island** and **Clan Sanctuary**, then claim your rewards!",
-            color=discord.Color.gold()
-        )
+    @bot.tree.command(name="items", description="Show loot items by rarity or filter")
+    @bot.tree.command(name="items", description="Show loot items by rarity or filter")([app_commands.describe(filter="common/uncommon/rare/legendary/points/all")])
+    async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
+        user_pts = get_points(interaction.user.id)
+        filter = filter.lower().strip()
 
-        emoji_map = {
-            "Rare Equipment": "🛡️",
-            "Rare Weapon": "🗡️",
-            "Rare Materials": "📦",
-            "Radiant Enchantment Stone": "✨",
-            "Darkening Enchantment Stone": "🌑",
-            "Middle Horn": "📯",
-            "Lesser Horn": "🎺",
-            "Silvarin (Bundle)": "💎",
-            "Gwemix Piece Pouch": "🎒",
-            "Artisan": "⚒️",
-            "Enchantment Tome Skill (White)": "📖",
-            "Enchantment Tome Skill (Green)": "📗",
-            "Enchantment Tome Skill (Rare)": "📘",
-            "Soul-Uncommon (Green)": "🟢",
-            "Soul-Rare (Blue)": "🔵"
-        }
-
-        user_id = interaction.user.id
-
-        # Separate claim vs bid items
+        embed = discord.Embed(title="🎁 Loot Shop", color=discord.Color.gold())
+        
         claim_items = []
         bid_items = []
 
-        seen_items = set()
-
-        for alias_map, is_bidding in ((claim_aliases, False), (bid_aliases, True)):
-            for code, name in alias_map.items():
-                if not code.isdigit() or name in seen_items:
+        # Filter logic
+        for name in loot_meta:
+            rarity = loot_meta[name].get("rarity", "common")
+            cost = loot_costs[name]["cost"]
+            rule = loot_costs[name]["rule"]
+            
+            # Apply filters
+            if filter != "all":
+                if filter == "points" and cost > user_pts:
                     continue
-
-                seen_items.add(name)
-                cost = loot_costs.get(name, {"cost": 0, "rule": "No rule"})
-                rule = cost.get("rule", "No rule")
-                emoji = emoji_map.get(name, "❔")
-                points = cost["cost"]
-                pt_str = "pt" if points == 1 else "pts"
-
-                remaining = remaining_claims(user_id, name)
-                extra = f"\n📊 Remaining: {remaining}" if remaining is not None else ""
-                
-                stock = loot_meta.get(name, {}).get("stock", 999)
-                stock_text = f"**Stock:** {stock} left" if stock < 999 else "**Stock:** Unlimited"
-
-                source_code = loot_meta.get(name, {}).get("source_code", code)
-                field_value = f"**Cost:** {points} {pt_str}\n{stock_text}\n**Rule:** {rule}{extra}"
-
-                if is_bidding:
-                    bid_items.append((emoji, code, name, field_value, points))
+                if filter == rarity:
+                    pass
                 else:
-                    claim_items.append((emoji, code, name, field_value, points))
+                    continue
+            
+            is_bidding = loot_meta[name]["is_bidding"]
+            remaining = remaining_claims(interaction.user.id, name)
+            extra = f"\n📊 Rem: {remaining}" if remaining is not None else ""
+            
+            stock = loot_meta[name]["stock"]
+            stock_text = f"**Stock:** {stock}" if stock < 999 else "**Stock:** Unlimited"
+            
+            aliases = loot_meta[name]["aliases"]
+            alias = aliases[0] if aliases else loot_meta[name]["source_code"]
+            field_name = f"{get_emoji(name, rarity)} [`{alias}`] {name}"
+            field_value = f"**Cost:** {cost} pts\n{stock_text}\n**Rule:** {rule}\n**Rarity:** {rarity.title()}{extra}"
+            
+            if is_bidding:
+                bid_items.append((cost, field_name, field_value))
+            else:
+                claim_items.append((cost, field_name, field_value))
 
-        # Add claim items section
-        if claim_items:
-            embed.add_field(
-                name="✅ CLAIM ITEMS",
-                value="Fixed price • Use `/claim [alias]`",
-                inline=False
-            )
-            for item in sorted(claim_items, key=lambda x: x[4]):
-                emoji, code, name, field_value, points = item
-                aliases = loot_meta.get(name, {}).get("aliases", [])
-                alias = aliases[0] if aliases else code
-                field_name = f"{emoji} [`{alias}`] {name}"
-                embed.add_field(
-                    name=field_name,
-                    value=field_value,
-                    inline=True
-                )
-
-        # Add bidding items section
+        # Sort & add claim items
+        for cost, name, value in sorted(claim_items):
+            embed.add_field(name=name, value=value, inline=True)
+        
+        # Sort & add bid items (high→low)
         if bid_items:
-            embed.add_field(
-                name="⚔️ BIDDING ITEMS",
-                value="Highest bid wins • Use `/bid [alias] [amount]`",
-                inline=False
-            )
-            for item in sorted(bid_items, key=lambda x: x[4], reverse=True):
-                emoji, code, name, field_value, points = item
-                aliases = loot_meta.get(name, {}).get("aliases", [])
-                alias = aliases[0] if aliases else code
-                field_name = f"{emoji} [`{alias}`] {name}"
-                embed.add_field(
-                    name=field_name,
-                    value=field_value,
-                    inline=True
-                )
-        # Add quick reference - UPDATED to match events.json
-        embed.add_field(
-            name="🎯 QUICK REFERENCE",
-            value="**Earn Points:**\n🟢 **Sindri's Island** Win: +30\n🟡 **Sindri's Island** Lose: +15\n🔵 **Clan Sanctuary** Participated: +15",
-            inline=False
-        )
+            embed.add_field(name="⚔️ BIDDING ITEMS", value="Use `/bid [alias] [pts]`", inline=False)
+            for cost, name, value in sorted(bid_items, reverse=True):
+                embed.add_field(name=name, value=value, inline=True)
 
-        # Aliases section
-        alias_names = sorted({alias for alias in list(claim_aliases.keys()) + list(bid_aliases.keys()) if not alias.isdigit()})
-        aliases = ", ".join([f"`{alias}`" for alias in alias_names])
-        embed.add_field(
-            name="🔑 ALIASES",
-            value=f"Shortcuts: {aliases}",
-            inline=False
-        )
-
-        embed.set_footer(text="Use /points to check your balance • /leaderboard for top earners")
+        if not claim_items and not bid_items:
+            embed.description = f"**No {filter} items found.**\nTry: common, uncommon, rare, legendary, points, all"
+        else:
+            embed.description = f"💰 **Your Points: {user_pts}**\n*Filter: {filter or 'all'}*"
+        
+        embed.set_footer(text="/points | /restock | /stock")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+def get_emoji(name: str, rarity: str) -> str:
+    """Emoji by rarity/name"""
+    emojis = {
+        "common": "⚪",
+        "uncommon": "🟢", 
+        "rare": "🔵",
+        "legendary": "🟣"
+    }
+    return emojis.get(rarity, "❔")

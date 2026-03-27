@@ -1,0 +1,5 @@
+code,name,cost,rule,stock,rarity
+1,Rare Equipment,15,Bidding,5,rare
+2,Common Sword,5,Claim,10,common
+3,Uncommon Shield,12,Claim,8,uncommon
+equip,Legendary Staff,30,Bidding,2,legendary
