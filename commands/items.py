@@ -62,7 +62,7 @@ def setup(bot):
         else:
             embed.description = f"💰 **Your Points: {user_pts}**\n*Filter: {filter or 'all'}*"
         
-        embed.set_footer(text="`/itemlist` plain table | /points | /restock")
+        embed.set_footer(text="`/itemlist` table | /points | /restock")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
