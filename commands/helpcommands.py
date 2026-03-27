@@ -37,58 +37,67 @@ def setup(bot):
     @bot.tree.command(name="masterlist", description="Full list of all slash commands")
     async def masterlist_cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        desc = "**🏆 Guild Loot Bot - Full Slash Commands**\\n\\n"
-        desc += "**🎮 User Commands:**\\n"
+        embed = discord.Embed(title="📋 All Slash Commands", color=discord.Color.blue())
+        
+        # User commands
         user_cmds = [
-            "points - Check balance",
-            "leaderboard - Top players",
-            "items - Loot shop",
-            "claim [code] - Claim item",
-            "bid [code] [amount] - Bid points",
-            "history [limit] - Recent winners",
-            "claimsleaderboard - Active claims",
-            "bidsleaderboard - Bid standings",
-            "transfer [@player pts] - Send points",
-            "claimwinner [item] - Spin winner"
+            "• **`/points`** - Check your points balance",
+            "• **`/leaderboard`** - See top players by points",
+            "• **`/items`** - Browse loot shop & codes",
+            "• **`/claim [code]`** - Claim item (e.g. `/claim A1`)",
+            "• **`/bid [code] [pts]`** - Bid points (e.g. `/bid A1 50`)",
+            "• **`/history`** - Recent winners list",
+            "• **`/claimsleaderboard`** - Active claims",
+            "• **`/bidsleaderboard`** - Current bids"
         ]
-        desc += " • " + "\\n • ".join(user_cmds) + "\\n\\n"
+        embed.add_field(name="🎮 User Commands", value="\\n".join(user_cmds), inline=False)
         
-        desc += "**⚙️ Admin Commands (Mod/Elder):**\\n"
+        # Player actions
+        player_cmds = [
+            "• **`/transfer @player [pts]`** - Send points (e.g. `/transfer @friend 10`)",
+            "• **`/claimwinner [item]`** - Spin random winner (admin)"
+        ]
+        embed.add_field(name="👥 Player Actions", value="\\n".join(player_cmds), inline=False)
+        
+        # Admin commands
         admin_cmds = [
-            "addpoints/refundpoints - Manage points",
-            "impitems [csv] - Import items",
-            "expitems - Export items",
-            "endbid/award/clearclaims - Loot management",
-            "reset - Reset data",
-            "setpointlimit - Set spend limit",
-            "cls - Clear channel",
-            "getids/xid/whois - ID tools",
-            "acmd - Admin help"
+            "• **`/addpoints @player [pts]`** - Add points (Mod/Elder)",
+            "• **`/refundpoints @player [pts]`** - Deduct points",
+            "• **`/impitems [csv]`** - Import items from CSV",
+            "• **`/expitems`** - Export items to CSV"
         ]
-        desc += " • " + "\\n • ".join(admin_cmds) + "\\n\\n"
+        embed.add_field(name="⚙️ Admin Commands", value="\\n".join(admin_cmds), inline=False)
         
-        desc += "**Use `/cmd` for user help, `/acmd` for admin details.**"
+        # Management
+        mgmt_cmds = [
+            "• **`/endbid [code]`** - Close bids & award",
+            "• **`/award @player [item]`** - Manual award",
+            "• **`/clearclaims`** - Remove expired claims",
+            "• **`/reset`** - Reset all data (careful!)"
+        ]
+        embed.add_field(name="🔧 Management", value="\\n".join(mgmt_cmds), inline=False)
         
-        embed = discord.Embed(title="📋 Master Command List", description=desc, color=discord.Color.blue())
+        embed.set_footer(text="Use /cmd or /acmd for quick views • Mod/Elder = Moderator or Elder role")
         await interaction.followup.send(embed=embed)
 
-    @bot.tree.command(name="cmd", description="View user commands")
+    @bot.tree.command(name="cmd", description="Quick user commands help")
     async def cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        lines = ["**User Commands:**"]
-        lines.append("• `/points` - Balance")
-        lines.append("• `/leaderboard` - Top players")
-        lines.append("• `/items` - Loot shop")
-        lines.append("• `/claim [code]` - Claim item")
-        lines.append("• `/bid [code] [pts]` - Bid")
-        lines.append("• `/history` - Winners")
-        lines.append("• `/claimsleaderboard` - Claims")
-        lines.append("• `/bidsleaderboard` - Bids")
-        lines.append("• `/transfer @player pts` - Send pts")
-        lines.append("• `/claimwinner [item]` - Spin winner")
-        await interaction.followup.send("\\n".join(lines))
+        embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
+        cmds = [
+            "**`/points`** - Your balance",
+            "**`/leaderboard`** - Top ranks",
+            "**`/items`** - Shop & codes",
+            "**`/claim [code]`** - Claim (e.g. A1)",
+            "**`/bid [code] [pts]`** - Bid (e.g. A1 50)",
+            "**`/history`** - Past winners",
+            "**`/claimsleaderboard`** / **`/bidsleaderboard`** - Live status"
+        ]
+        embed.description = "\\n".join(cmds)
+        embed.set_footer(text="`/transfer @player pts` - Send points")
+        await interaction.followup.send(embed=embed)
 
-    @bot.tree.command(name="acmd", description="View admin commands")
+    @bot.tree.command(name="acmd", description="Quick admin commands help (Mod/Elder)")
     async def acmd(interaction: discord.Interaction):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
@@ -96,21 +105,26 @@ def setup(bot):
             await interaction.response.send_message("❌ Admin only.", ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True)
-        lines = ["**Admin Commands:**"]
-        lines.append("• `/addpoints`/`refundpoints` - Points mgmt")
-        lines.append("• `/impitems`/`expitems` - Item lists")
-        lines.append("• `/endbid`/`award`/`clearclaims` - Loot")
-        lines.append("• `/reset`/`setpointlimit` - Settings")
-        lines.append("• `/cls` - Clear channel")
-        lines.append("• `/getids`/`listevents`/`setevent` - Events")
-        lines.append("• `/importattendance` - CSV")
-        await interaction.followup.send("\\n".join(lines))
+        embed = discord.Embed(title="⚙️ Admin Commands", color=discord.Color.orange())
+        cmds = [
+            "**`/addpoints`/`refundpoints @player pts`** - Points management",
+            "**`/impitems [csv]`** - Import items",
+            "**`/expitems`** - Export items",
+            "**`/endbid [code]`** - Close & award bids",
+            "**`/award @player [item]`** - Manual give",
+            "**`/cls`** - Clear channel messages",
+            "**`/getids`** - Export member IDs",
+            "**`/setpointlimit [pts]`** - Weekly limit"
+        ]
+        embed.description = "\\n".join(cmds)
+        embed.set_footer(text="Events: `/setevent`, `/listevents` • Attendance: `/importattendance`")
+        await interaction.followup.send(embed=embed)
 
     @bot.tree.command(name="xid", description="View Discord ID")
     async def xid(interaction: discord.Interaction, member: discord.Member = None):
         await interaction.response.defer(ephemeral=True)
         member = member or interaction.user
-        await interaction.followup.send(f"🆔 {member.display_name}: `{member.id}`")
+        await interaction.followup.send(f"🆔 **{member.display_name}**: `{member.id}`")
 
     @bot.tree.command(name="whois", description="Look up user by ID")
     async def whois(interaction: discord.Interaction, user_id: str):
@@ -119,8 +133,8 @@ def setup(bot):
             uid = int(user_id.strip())
             member = interaction.guild.get_member(uid)
             if member:
-                await interaction.followup.send(f"👤 {member.display_name} (ID: {uid})\\nJoined: {member.joined_at}")
+                await interaction.followup.send(f"👤 **{member.display_name}** (ID: `{uid}`)\\n📅 Joined: {member.joined_at}")
             else:
-                await interaction.followup.send(f"❌ User {uid} not in server.")
+                await interaction.followup.send(f"❌ User {uid} not found in server.")
         except ValueError:
-            await interaction.followup.send("❌ Invalid ID")
+            await interaction.followup.send("❌ Invalid ID format. Use numbers only.")
