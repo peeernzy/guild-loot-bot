@@ -63,13 +63,13 @@ def setup(bot):
             alias = loot_meta[name].get("aliases", []) 
             alias = alias[0] if alias else loot_meta[name].get("source_code", name)
             
-            line = f"{emoji} `{alias}` **{name}** | {cost}pts | Stock: {stock if stock < 999 else '∞'}"
+            line = f"{emoji} **{alias}** ({name}) | {cost}p | S:{stock}"
 
-            
             if is_bidding:
                 bid_lines.append(line)
             else:
                 claim_lines.append(line)
+
 
         # Claim table - dynamically truncate
         claim_table = truncate_table(claim_lines, "CLAIM ITEMS")
