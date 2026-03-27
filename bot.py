@@ -52,6 +52,11 @@ initialize_history()
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
+    # Reload loot items on startup
+    from commands.loot import reload_loot_items
+    reload_loot_items()
+    print("🔄 Reloaded loot items from loot_items.json")
+    
     # Load cogs (async with await, sync without)
     from commands import cls, item_import, setpointlimit, price
     await cls.setup(bot)
@@ -64,6 +69,7 @@ async def on_ready():
         print(f"📌 Synced {len(synced)} slash commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         print(f"❌ Sync error: {e}")
+
 
 # =========================
 # RUN BOT
