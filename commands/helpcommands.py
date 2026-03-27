@@ -40,7 +40,48 @@ COMMAND_DETAILS = {
     "summary": "Guild event summary.",
 }
 
+USER_CMDS = {
+    "points": COMMAND_DETAILS["points"],
+    "items": COMMAND_DETAILS["items"],
+    "itemlist": COMMAND_DETAILS["itemlist"],
+    "stock": COMMAND_DETAILS["stock"],
+    "claim": COMMAND_DETAILS["claim"],
+    "claimcancel": COMMAND_DETAILS["claimcancel"],
+    "bid": COMMAND_DETAILS["bid"],
+"bidcancel": COMMAND_DETAILS["bidcancel"],
+    "claimsleaderboard": COMMAND_DETAILS["claimsleaderboard"],
+    "bidsleaderboard": COMMAND_DETAILS["bidsleaderboard"],
+    "history": COMMAND_DETAILS["history"],
+    "transfer": COMMAND_DETAILS["transfer"],
+    "leaderboard": COMMAND_DETAILS["leaderboard"]
+}
+
+ADMIN_CMDS = {
+    "addpoints": COMMAND_DETAILS["addpoints"],
+    "refundpoints": COMMAND_DETAILS["refundpoints"],
+    "expitems": COMMAND_DETAILS["expitems"],
+    "impitems": COMMAND_DETAILS["impitems"],
+    "restock": COMMAND_DETAILS["restock"],
+    "reloaditems": "Reload loot items from DB (sync command).",
+    "endbid": COMMAND_DETAILS["endbid"],
+    "award": COMMAND_DETAILS["award"],
+    "clearclaims": COMMAND_DETAILS["clearclaims"],
+    "cls": COMMAND_DETAILS["cls"],
+    "reset": COMMAND_DETAILS["reset"],
+    "getids": COMMAND_DETAILS["getids"]
+}
+
+EVENT_CMDS = {
+    "summary": COMMAND_DETAILS["summary"],
+    "setpointlimit": COMMAND_DETAILS["setpointlimit"],
+    "price": COMMAND_DETAILS["price"],
+    "importattendance": COMMAND_DETAILS["importattendance"],
+    "listevents": COMMAND_DETAILS["listevents"],
+    "setevent": COMMAND_DETAILS["setevent"]
+}
+
 def setup(bot):
+
     @bot.tree.command(name="masterlist", description="Full list of all slash commands")
     async def masterlist_cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -48,48 +89,42 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-            value="**Loot:** `/items` `/itemlist` `/stock`\n**Actions:** `/claim` `/claimcancel` `/bid` `/bidcancel`\n**Info:** `/points` `/leaderboard` `/history` `/transfer` `/claimsleaderboard` `/bidsleaderboard`",
-            inline=False
-        )
-        
-        embed.add_field(
-            name="👥 Player Actions",
-            value="• `/transfer @player [pts]` - Send points",
+            value="`/items` - Browse loot shop\n`/itemlist` - Full table\n`/stock [code]` - Item stock\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid\n`/points` - Balance\n`/leaderboard` - Top players\n`/history` - Winners\n`/transfer @player [pts]` - Send points\n`/claimsleaderboard` - Claims list\n`/bidsleaderboard` - Bids list",
             inline=False
         )
         
         embed.add_field(
             name="⚙️ Admin (Mod/Elder)",
-            value="**Items:** `/restock` `/impitems force:true` `/expitems`\n**Points:** `/addpoints` `/refundpoints` `/setpointlimit`\n**Mgmt:** `/cls` `/getids` `/endbid` `/award` `/clearclaims` `/reset`",
+            value="`/addpoints @player [pts]` - Add points\n`/refundpoints @player [pts]` - Deduct\n`/impitems [csv] force:true` - CSV import\n`/expitems` - Export CSV\n`/restock [code] [stock]` - Restock\n`/reloaditems` - Reload DB\n`/endbid [item]` - Close bid\n`/award [item] @player` - Award\n`/clearclaims` - Clear expired\n`/reset` - Reset data\n`/cls` - Clear chat\n`/getids` - ID list",
             inline=False
         )
         
         embed.add_field(
             name="🔧 Events",
-            value="`/summary` `/attendance` `/setevent` `/listevents`",
+            value="`/summary` - Event stats\n`/setevent` - Setup event\n`/listevents` - List events\n`/attendance` - Track attendance",
             inline=False
         )
         
-        embed.set_footer(text="`/cmd` user | `/acmd` admin | Full: `/masterlist`")
+        embed.set_footer(text="Quick: `/cmd` user | `/acmd` admin | Full: `/masterlist`")
         await interaction.followup.send(embed=embed)
 
-    @bot.tree.command(name="cmd", description="Quick user commands")
+    @bot.tree.command(name="cmd", description="User commands help")
     async def cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
         embed.add_field(
-            name="Quick Loot",
-            value="`/items` `/claim [code]` `/bid [code] [pts]`\n`/claimcancel` `/bidcancel` `/stock` `/points`",
+            name="Loot Actions",
+            value="`/items` - Shop\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid",
             inline=False
         )
         embed.add_field(
             name="Info",
-            value="`/leaderboard` `/history` `/claimsleaderboard` `/bidsleaderboard`",
+            value="`/points` - Balance\n`/stock [code]` - Stock\n`/leaderboard` - Top\n`/history` - Winners\n`/claimsleaderboard` - Claims\n`/bidsleaderboard` - Bids",
             inline=False
         )
         await interaction.followup.send(embed=embed)
 
-    @bot.tree.command(name="acmd", description="Quick admin (Mod/Elder)")
+    @bot.tree.command(name="acmd", description="Admin commands help")
     async def acmd(interaction: discord.Interaction):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
@@ -100,12 +135,12 @@ def setup(bot):
         embed = discord.Embed(title="⚙️ Admin Commands", color=discord.Color.orange())
         embed.add_field(
             name="Items",
-            value="`/impitems [csv] force:true` `/expitems` `/restock`",
+            value="`/impitems [csv] force:true` - Import\n`/expitems` - Export\n`/restock [code] [stock]` - Restock\n`/reloaditems` - Reload",
             inline=False
         )
         embed.add_field(
-            name="Mgmt",
-            value="`/cls` `/getids` `/endbid` `/award` `/clearclaims` `/reset` `/addpoints`",
+            name="Management",
+            value="`/addpoints/refundpoints` - Points\n`/endbid [item]` - Close bid\n`/award [item] @player` - Award\n`/clearclaims` - Clear expired\n`/reset` - Reset\n`/cls` - Clear chat",
             inline=False
         )
         await interaction.followup.send(embed=embed)
