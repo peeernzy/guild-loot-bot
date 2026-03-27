@@ -48,7 +48,7 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-            value="• `/points` - Points balance\n• `/leaderboard` - Top players\n• `/items` - Fancy loot shop\n• `/itemlist` - Items table\n• `/stock [code]` - Item stock\n• `/claim [code]` | `/claimcancel [code]` - Claim/Cancel\n• `/bid [code] [pts]` | `/bidcancel [code]` - Bid/Cancel\n• `/history` - Winners\n• `/claimsleaderboard` - Claims\n• `/bidsleaderboard` - Bids",
+            value="**Loot:** `/items` `/itemlist` `/stock`\n**Actions:** `/claim` `/claimcancel` `/bid` `/bidcancel`\n**Info:** `/points` `/leaderboard` `/history` `/transfer` `/claimsleaderboard` `/bidsleaderboard`",
             inline=False
         )
         
@@ -59,18 +59,18 @@ def setup(bot):
         )
         
         embed.add_field(
-            name="⚙️ Admin Commands (Mod/Elder)",
-            value="• `/addpoints/@refundpoints [pts]` - Points mgmt\n• `/restock [item] [qty]` - Restock\n• `/impitems/expitems [CSV]` - Import/Export\n• `/cls` - Clear channel\n• `/getids` - IDs list\n• `/setpointlimit` - Weekly limit",
+            name="⚙️ Admin (Mod/Elder)",
+            value="**Items:** `/restock` `/impitems force:true` `/expitems`\n**Points:** `/addpoints` `/refundpoints` `/setpointlimit`\n**Mgmt:** `/cls` `/getids` `/endbid` `/award` `/clearclaims` `/reset`",
             inline=False
         )
         
         embed.add_field(
-            name="🔧 Management",
-            value="• `/endbid/award/clearclaims/reset` - Event mgmt\n• `/summary/attendance/setevent/listevents` - Events",
+            name="🔧 Events",
+            value="`/summary` `/attendance` `/setevent` `/listevents`",
             inline=False
         )
         
-        embed.set_footer(text="`/cmd` user | `/acmd` admin | `/xid/@whois` utils | Full: `/helpcommands`")
+        embed.set_footer(text="`/cmd` user | `/acmd` admin | Full: `/masterlist`")
         await interaction.followup.send(embed=embed)
 
     @bot.tree.command(name="cmd", description="Quick user commands")
@@ -78,13 +78,18 @@ def setup(bot):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
         embed.add_field(
-            name="Loot & Points",
-            value="• `/points` • `/leaderboard` • `/items` • `/itemlist`\n• `/stock [code]` • `/claim` `/claimcancel` • `/bid` `/bidcancel`\n• `/history` • `/transfer` • claims/bids leaderboards",
+            name="Quick Loot",
+            value="`/items` `/claim [code]` `/bid [code] [pts]`\n`/claimcancel` `/bidcancel` `/stock` `/points`",
+            inline=False
+        )
+        embed.add_field(
+            name="Info",
+            value="`/leaderboard` `/history` `/claimsleaderboard` `/bidsleaderboard`",
             inline=False
         )
         await interaction.followup.send(embed=embed)
 
-    @bot.tree.command(name="acmd", description="Quick admin commands (Mod/Elder)")
+    @bot.tree.command(name="acmd", description="Quick admin (Mod/Elder)")
     async def acmd(interaction: discord.Interaction):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
@@ -94,13 +99,13 @@ def setup(bot):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="⚙️ Admin Commands", color=discord.Color.orange())
         embed.add_field(
-            name="Points & Items",
-            value="• `/addpoints/refundpoints`\n• `/restock [item] [qty]`\n• `/impitems/expitems [CSV]`",
+            name="Items",
+            value="`/impitems [csv] force:true` `/expitems` `/restock`",
             inline=False
         )
         embed.add_field(
-            name="Management",
-            value="• `/cls` • `/getids` • `/setpointlimit`\n• `/endbid/award/clearclaims/reset`\n• Events: `/summary/setevent/listevents`",
+            name="Mgmt",
+            value="`/cls` `/getids` `/endbid` `/award` `/clearclaims` `/reset` `/addpoints`",
             inline=False
         )
         await interaction.followup.send(embed=embed)
