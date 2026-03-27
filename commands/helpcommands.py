@@ -39,52 +39,39 @@ def setup(bot):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="📋 All Slash Commands", color=discord.Color.blue())
         
-        # User Commands
         embed.add_field(
             name="🎮 User Commands",
             value="• `/points` - Check your points balance\n• `/leaderboard` - See top players by points\n• `/items` - Browse loot shop & codes\n• `/claim [code]` - Claim item (e.g. `/claim A1`)\n• `/bid [code] [pts]` - Bid points (e.g. `/bid A1 50`)\n• `/history` - Recent winners list\n• `/claimsleaderboard` - Active claims\n• `/bidsleaderboard` - Current bids",
             inline=False
         )
         
-        # Player Actions
         embed.add_field(
             name="👥 Player Actions",
-            value="• `/transfer @player [pts]` - Send points (e.g. `/transfer @friend 10`)\n• `/claimwinner [item]` - Spin random winner (admin)",
+            value="• `/transfer @player [pts]` - Send points",
             inline=False
         )
         
-        # Admin Commands
         embed.add_field(
             name="⚙️ Admin Commands",
             value="• `/addpoints @player [pts]` - Add points (Mod/Elder)\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [csv]` - Import items from CSV\n• `/expitems` - Export items to CSV",
             inline=False
         )
         
-        # Management
         embed.add_field(
             name="🔧 Management",
             value="• `/endbid [code]` - Close bids & award\n• `/award @player [item]` - Manual award\n• `/clearclaims` - Remove expired claims\n• `/reset` - Reset all data (careful!)",
             inline=False
         )
         
-        embed.set_footer(text="Quick: `/cmd` user | `/acmd` admin | `/setpointlimit` limit | `/cls` clear | `/getids` IDs")
+        embed.set_footer(text="`/cmd` user | `/acmd` admin | `/cls` clear | `/getids` IDs | `/setpointlimit` limit")
         await interaction.followup.send(embed=embed)
 
     @bot.tree.command(name="cmd", description="Quick user commands help")
     async def cmd(interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
-        cmds = [
-            "• `/points` - Check your points balance",
-            "• `/leaderboard` - See top players by points",
-            "• `/items` - Browse loot shop & codes",
-            "• `/claim [code]` - Claim item (e.g. `/claim A1`)",
-            "• `/bid [code] [pts]` - Bid points (e.g. `/bid A1 50`)",
-            "• `/history` - Recent winners list",
-            "• `/claimsleaderboard` - Active claims",
-            "• `/bidsleaderboard` - Current bids"
-        ]
-        embed.description = "\\n".join(cmds)
+        value = "• `/points` - Check your points balance\n• `/leaderboard` - See top players by points\n• `/items` - Browse loot shop & codes\n• `/claim [code]` - Claim item (e.g. `/claim A1`)\n• `/bid [code] [pts]` - Bid points (e.g. `/bid A1 50`)\n• `/history` - Recent winners list\n• `/claimsleaderboard` - Active claims\n• `/bidsleaderboard` - Current bids"
+        embed.add_field(name="", value=value, inline=False)
         embed.set_footer(text="• `/transfer @player [pts]` - Send points")
         await interaction.followup.send(embed=embed)
 
@@ -97,20 +84,8 @@ def setup(bot):
             return
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(title="⚙️ Admin Commands", color=discord.Color.orange())
-        cmds = [
-            "• `/addpoints @player [pts]` - Add points",
-            "• `/refundpoints @player [pts]` - Deduct points",
-            "• `/impitems [csv]` - Import from CSV",
-            "• `/expitems` - Export to CSV",
-            "• `/endbid [code]` - Close bids",
-            "• `/award @player [item]` - Manual award",
-            "• `/cls` - Clear channel",
-            "• `/getids` - Export IDs",
-            "• `/setpointlimit [pts]` - Weekly limit",
-            "• `/clearclaims` - Clean claims",
-            "• `/reset` - Reset data"
-        ]
-        embed.description = "\\n".join(cmds)
+        value = "• `/addpoints @player [pts]` - Add points\n• `/refundpoints @player [pts]` - Deduct points\n• `/impitems [csv]` - Import from CSV\n• `/expitems` - Export to CSV\n• `/endbid [code]` - Close bids\n• `/award @player [item]` - Manual award\n• `/cls` - Clear channel\n• `/getids` - Export IDs\n• `/setpointlimit [pts]` - Weekly limit\n• `/clearclaims` - Clean claims\n• `/reset` - Reset data"
+        embed.add_field(name="", value=value, inline=False)
         embed.set_footer(text="Events: `/setevent` `/listevents` | Attendance: `/importattendance`")
         await interaction.followup.send(embed=embed)
 
@@ -118,7 +93,7 @@ def setup(bot):
     async def xid(interaction: discord.Interaction, member: discord.Member = None):
         await interaction.response.defer(ephemeral=True)
         member = member or interaction.user
-        await interaction.followup.send(f"🆔 **{member.display_name}** ID: `{member.id}`")
+        await interaction.followup.send(f"🆔 **{member.display_name}**\\nID: `{member.id}`")
 
     @bot.tree.command(name="whois", description="Look up user by ID")
     async def whois(interaction: discord.Interaction, user_id: str):
