@@ -21,7 +21,12 @@ def load_loot_items():
     try:
         with open("loot_items.json", "r", encoding="utf-8") as f:
             data = json.load(f)
-            items = list(data.items()) if isinstance(data, dict) else data.get("items", [])
+            if isinstance(data, dict):
+                items = list(data.items())
+            elif isinstance(data, list):
+                items = data
+            else:
+                items = []
 
             costs = {}
             claim_aliases = {}
