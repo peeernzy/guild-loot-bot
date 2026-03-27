@@ -1,12 +1,11 @@
 import discord
-import discord
 from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
 from .utils import get_points, remaining_claims
 
 def setup(bot):
-    @discord.app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
-    @bot.tree.command(name="items", description="Show loot items by rarity or filter")
+    @app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
+    @bot.tree.command(name="items", description="Show loot items by rarity or filter (fancy view)")
     async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()
@@ -63,8 +62,44 @@ def setup(bot):
         else:
             embed.description = f"💰 **Your Points: {user_pts}**\n*Filter: {filter or 'all'}*"
         
-        embed.set_footer(text="/points | /restock | /stock")
+        embed.set_footer(text="`/itemlist` plain table | /points | /restock")
 
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @bot.tree.command(name="itemlist", description="Simple table of all loot items (code, name, cost, rule, stock, rarity)")
+    async def itemlist_cmd(interaction: discord.Interaction):
+        embed = discord.Embed(title="📋 Loot Items Masterlist", color=discord.Color.blurple())
+        
+        claim_table = "```\nCODE  | NAME             | COST | RULE   | STOCK | RARITY\n"
+        bid_table = "```\nCODE  | NAME             | COST | RULE   | STOCK | RARITY\n"
+        
+        claim_count = 0
+        bid_count = 0
+
+        for name in sorted(loot_meta):
+            code = loot_meta[name]["source_code"]
+            cost = loot_costs[name]["cost"]
+            rule = loot_costs[name]["rule"][:6]  # Shorten rule
+            stock = loot_meta[name]["stock"]
+            rarity = loot_meta[name]["rarity"][:5]  # Shorten rarity
+            
+            row = f"{code:4} | {name[:15]:15} | {cost:4} | {rule:6} | {stock:5} | {rarity}"
+            
+            if loot_meta[name]["is_bidding"]:
+                bid_table += row + "\n"
+                bid_count += 1
+            else:
+                claim_table += row + "\n"
+                claim_count += 1
+
+        claim_table += "```"
+        bid_table += "```"
+
+        embed.add_field(name=f"✅ Claim Items ({claim_count})", value=claim_table, inline=False)
+        if bid_count > 0:
+            embed.add_field(name=f"⚔️ Bid Items ({bid_count})", value=bid_table, inline=False)
+
+        embed.set_footer(text="Use `/items` for fancy view with emojis/stock info")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
