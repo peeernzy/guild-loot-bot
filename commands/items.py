@@ -1,10 +1,12 @@
 import discord
+import discord
+from discord import app_commands
 from .loot import claim_aliases, bid_aliases, loot_costs, loot_meta
 from .utils import get_points, remaining_claims
 
 def setup(bot):
+    @discord.app_commands.describe(filter="common/uncommon/rare/legendary/points/all")
     @bot.tree.command(name="items", description="Show loot items by rarity or filter")
-    @bot.tree.command(name="items", description="Show loot items by rarity or filter")([app_commands.describe(filter="common/uncommon/rare/legendary/points/all")])
     async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()

@@ -1,10 +1,14 @@
-# Guild Loot Bot Fix: Allclanpoints Command Error
+# Guild Loot Bot TODO
 
-## Steps:
-- [x] 1. Create TODO.md with plan steps (current).
-- [x] 2. Edit commands/summary.py: Add `await interaction.response.defer()` immediately, replace all `interaction.response.send_message(...)` with `await interaction.followup.send(...)` (3 places: no points, no valid members, success summary).
-- [x] 3. Verify edit success.
-- [x] 4. Update TODO.md with completion.
-- [ ] 5. Test command in Discord (run bot, use /allclanpoints on empty/full DB).
-- [ ] 6. attempt_completion once fixed.
+## Current Task: Fix SyntaxError in item_import.py
+
+✅ **Step 1:** Create TODO.md to track progress (completed).
+
+✅ **Step 2:** Edit `commands/item_import.py` to fix nested f-string with backslash.
+
+⏳ **Step 3:** Test by running `python bot.py` - verify no SyntaxError on import.
+
+⏳ **Step 4:** Test `/impitems` command in Discord with sample CSV.
+
+⏳ **Step 5:** Update TODO.md and attempt completion."
 
