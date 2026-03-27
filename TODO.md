@@ -1,1 +1,1 @@
-- [x] 1. Edit commands/welcome.py: Add embed.set_image(url=\"https://i.imgur.com/T8mRXOJ.jpg\")
+- [x] 1. Edit commands/getids.py: Remove /exportids command def
