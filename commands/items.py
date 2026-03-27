@@ -96,10 +96,10 @@ def setup(bot):
                     value=field_value,
                     inline=True
                 )
-        # Add quick reference
+        # Add quick reference - UPDATED to match events.json
         embed.add_field(
             name="🎯 QUICK REFERENCE",
-            value="**Earn Points:**\n🟢 **Sindri's Island** Win: +20\n🟡 **Sindri's Island** Lose: +10\n🔵 **Clan Sanctuary** Participated: +15",
+            value="**Earn Points:**\n🟢 **Sindri's Island** Win: +30\n🟡 **Sindri's Island** Lose: +15\n🔵 **Clan Sanctuary** Participated: +15",
             inline=False
         )
 
@@ -115,4 +115,3 @@ def setup(bot):
         embed.set_footer(text="Use /points to check your balance • /leaderboard for top earners")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
-
