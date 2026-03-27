@@ -10,13 +10,23 @@ from .loot import bids, claims, reload_loot_items
 
 LOOT_ITEMS_FILE = Path("loot_items.json")
 BACKUP_DIR = Path("backups")
-REQUIRED_COLUMNS = {"code", "name", "cost", "rule", "aliases"}
+REQUIRED_COLUMNS = {"code", "name", "cost", "rule", "aliases", "outcome"}  # outcome required
 
 
 def _normalize_aliases(raw_value: str) -> list[str]:
     if not raw_value:
         return []
     return [alias.strip() for alias in raw_value.split("|") if alias.strip()]
+
+
+# Outcome → points mapping
+def _calculate_points(outcome: int) -> int:
+    if outcome in (10, 20):  # participated
+        return 15
+    elif outcome in (11, 21, 22):  # absent or lose
+        return 0
+    else:
+        return 0
 
 
 def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
@@ -33,6 +43,13 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
         cost_text = (row.get("cost") or "").strip()
         rule = (row.get("rule") or "").strip()
         aliases = _normalize_aliases((row.get("aliases") or "").strip())
+
+        # outcome handling
+        try:
+            outcome = int(row.get("outcome", 0))
+        except ValueError:
+            outcome = 0
+        points = _calculate_points(outcome)
 
         if not code or not name or not cost_text or not rule:
             errors.append(f"Row {index}: code, name, cost, and rule are required.")
@@ -81,6 +98,8 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
                 "cost": cost,
                 "rule": rule,
                 "aliases": aliases,
+                "outcome": outcome,
+                "points": points,   # store calculated points
             }
         )
 
@@ -185,6 +204,10 @@ def setup(bot):
         _save_loot_items(items)
         reload_loot_items()
 
+        # Count rewarded players
+        rewarded_count = sum(1 for item in items if item.get("points", 0) > 0)
+        rewarded_names = [item["name"] for item in items if item.get("points", 0) > 0]
+
         backup_message = (
             f"\n🗂️ Backup created: `{backup_path.as_posix()}`"
             if backup_path else
@@ -193,6 +216,8 @@ def setup(bot):
 
         await interaction.followup.send(
             f"✅ Imported {len(items)} loot items from `{file.filename}`."
-            f"{backup_message}\n🔄 Loot commands now use the updated item list.",
+            f"\n🏅 {rewarded_count} players earned points based on outcomes."
+            + (f"\n👥 Awarded to: {', '.join(rewarded_names)}" if rewarded_names else "")
+            + f"{backup_message}\n🔄 Loot commands now use the updated item list.",
             ephemeral=True
         )
