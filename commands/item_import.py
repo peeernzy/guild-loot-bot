@@ -8,6 +8,8 @@ import discord
 from discord import app_commands
 
 from .loot import bids, claims, reload_loot_items
+from .points import using_postgres, get_sqlite_connection, get_postgres_connection
+from .logger import initialize_history
 
 LOOT_ITEMS_FILE = Path("loot_items.json")
 BACKUP_DIR = Path("backups")
@@ -96,18 +98,38 @@ def _find_unsafe_changes(new_items: list[dict]) -> list[str]:
 
 
 def _backup_current_loot_file() -> Path | None:
-    if not LOOT_ITEMS_FILE.exists():
-        return None
-
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
-    backup_path = BACKUP_DIR / f"loot_items-{timestamp}.json"
-    backup_path.write_text(LOOT_ITEMS_FILE.read_text(encoding="utf-8"), encoding="utf-8")
-    return backup_path
+    return None  # No longer needed with DB
 
 
-def _save_loot_items(items: list[dict]):
-    LOOT_ITEMS_FILE.write_text(json.dumps(items, indent=2), encoding="utf-8")
+def _save_loot_items_db(items: list[dict]):
+    initialize_history()
+    inserted = 0
+    if using_postgres():
+        with get_postgres_connection() as conn:
+            with conn.cursor() as cur:
+                for item in items:
+                    cur.execute("""
+                        INSERT INTO items (name, cost, rule, stock, rarity)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON CONFLICT (name) DO UPDATE SET
+                            cost = EXCLUDED.cost, rule = EXCLUDED.rule,
+                            stock = EXCLUDED.stock, rarity = EXCLUDED.rarity
+                    """, (item["name"], item["cost"], item["rule"], item["stock"], item["rarity"]))
+                    inserted += 1
+            conn.commit()
+    else:
+        with get_sqlite_connection() as conn:
+            for item in items:
+                conn.execute("""
+                    INSERT INTO items (name, cost, rule, stock, rarity)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(name) DO UPDATE SET
+                        cost = excluded.cost, rule = excluded.rule,
+                        stock = excluded.stock, rarity = excluded.rarity
+                """, (item["name"], item["cost"], item["rule"], item["stock"], item["rarity"]))
+                inserted += 1
+            conn.commit()
+    print(f"[IMPORT] Upserted {inserted} items to DB")
 
 
 def setup(bot):
@@ -149,10 +171,10 @@ def setup(bot):
             return
 
         backup_path = _backup_current_loot_file()
-        _save_loot_items(items)
+        _save_loot_items_db(items)
         reload_loot_items()
 
-        backup_text = f"\n🗂️ Backup saved: `{backup_path.name}`" if backup_path else ""
-        msg = f"✅ **{len(items)}** items imported from `{file.filename}`{backup_text}"
+        backup_text = ""  # No backup since DB
+        msg = f"✅ **{len(items)}** items upserted to DB from `{file.filename}`{backup_text}"
         msg += "\n🔄 Reloaded – use `/items` to verify."
         await interaction.followup.send(msg, ephemeral=True)

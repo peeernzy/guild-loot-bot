@@ -86,23 +86,16 @@ def setup(bot):
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="checkitemstore", description="Check item store + JSON file item count")
+    @bot.tree.command(name="checkitemstore", description="Check item store count (DB)")
     async def checkitemstore_cmd(interaction: discord.Interaction):
-        # Count raw JSON items
-        try:
-            with open("loot_items.json", "r", encoding="utf-8") as f:
-                raw_count = len(json.load(f))
-        except Exception:
-            raw_count = "Failed to read"
-        
         total_items = len(loot_meta)
         claim_count = sum(1 for name in loot_meta if not loot_meta[name].get("is_bidding", False))
         bid_count = total_items - claim_count
         
-        embed = discord.Embed(title="🛒 Item Store Check", color=discord.Color.green())
+        embed = discord.Embed(title="🛒 Item Store Check (DB)", color=discord.Color.green())
         embed.add_field(
             name="📊 Counts", 
-            value=f"**JSON file:** `{raw_count}` items\n**Loaded:** `{total_items}`\n**Claim:** `{claim_count}` **Bid:** `{bid_count}`", 
+            value=f"**DB Loaded:** `{total_items}`\n**Claim:** `{claim_count}` **Bid:** `{bid_count}`", 
             inline=False
         )
         embed.add_field(
@@ -115,7 +108,7 @@ def setup(bot):
             value="`/items` | `/itemlist`", 
             inline=True
         )
-        embed.set_footer(text="Reload: `/reloaditems`")
+        embed.set_footer(text="Reload: `/reloaditems` | Import: `/impitems`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
