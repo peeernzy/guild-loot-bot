@@ -4,9 +4,10 @@ from .points import get_all_points
 def setup(bot):
     @bot.tree.command(name="allclanpoints", description="Show all clan member points balances")
     async def allclanpoints_cmd(interaction: discord.Interaction):
+        await interaction.response.defer()
         points = get_all_points()
         if not points:
-            await interaction.response.send_message("No points recorded yet.")
+            await interaction.followup.send("No points recorded yet.")
             return
 
         entries = [
@@ -16,11 +17,11 @@ def setup(bot):
         ]
 
         if not entries:
-            await interaction.response.send_message("No valid members with points found.")
+            await interaction.followup.send("No valid members with points found.")
             return
 
         entries.sort(key=lambda x: x[1], reverse=True)
         summary_lines = [f"{member.display_name}: {pts}" for member, pts in entries]
         summary_text = "\n".join(summary_lines)
 
-        await interaction.response.send_message(f"📊 Points Summary:\n{summary_text}")
+        await interaction.followup.send(f"📊 Points Summary:\n{summary_text}")

@@ -36,8 +36,9 @@ COMMAND_DETAILS = {
 def setup(bot):
     @bot.tree.command(name="masterlist", description="Full list of all slash commands")
     async def masterlist_cmd(interaction: discord.Interaction):
-        desc = "**🏆 Guild Loot Bot - Full Slash Commands**\n\n"
-        desc += "**🎮 User Commands:**\n"
+        await interaction.response.defer(ephemeral=True)
+        desc = "**🏆 Guild Loot Bot - Full Slash Commands**\\n\\n"
+        desc += "**🎮 User Commands:**\\n"
         user_cmds = [
             "points - Check balance",
             "leaderboard - Top players",
@@ -50,9 +51,9 @@ def setup(bot):
             "transfer [@player pts] - Send points",
             "claimwinner [item] - Spin winner"
         ]
-        desc += " • " + "\n • ".join(user_cmds) + "\n\n"
+        desc += " • " + "\\n • ".join(user_cmds) + "\\n\\n"
         
-        desc += "**⚙️ Admin Commands (Mod/Elder):**\n"
+        desc += "**⚙️ Admin Commands (Mod/Elder):**\\n"
         admin_cmds = [
             "addpoints/refundpoints - Manage points",
             "impitems [csv] - Import items",
@@ -64,15 +65,16 @@ def setup(bot):
             "getids/xid/whois - ID tools",
             "acmd - Admin help"
         ]
-        desc += " • " + "\n • ".join(admin_cmds) + "\n\n"
+        desc += " • " + "\\n • ".join(admin_cmds) + "\\n\\n"
         
         desc += "**Use `/cmd` for user help, `/acmd` for admin details.**"
         
         embed = discord.Embed(title="📋 Master Command List", description=desc, color=discord.Color.blue())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed)
 
     @bot.tree.command(name="cmd", description="View user commands")
     async def cmd(interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         lines = ["**User Commands:**"]
         lines.append("• `/points` - Balance")
         lines.append("• `/leaderboard` - Top players")
@@ -84,7 +86,7 @@ def setup(bot):
         lines.append("• `/bidsleaderboard` - Bids")
         lines.append("• `/transfer @player pts` - Send pts")
         lines.append("• `/claimwinner [item]` - Spin winner")
-        await interaction.response.send_message("\n".join(lines), ephemeral=True)
+        await interaction.followup.send("\\n".join(lines))
 
     @bot.tree.command(name="acmd", description="View admin commands")
     async def acmd(interaction: discord.Interaction):
@@ -93,6 +95,7 @@ def setup(bot):
         if not has_permission:
             await interaction.response.send_message("❌ Admin only.", ephemeral=True)
             return
+        await interaction.response.defer(ephemeral=True)
         lines = ["**Admin Commands:**"]
         lines.append("• `/addpoints`/`refundpoints` - Points mgmt")
         lines.append("• `/impitems`/`expitems` - Item lists")
@@ -101,22 +104,23 @@ def setup(bot):
         lines.append("• `/cls` - Clear channel")
         lines.append("• `/getids`/`listevents`/`setevent` - Events")
         lines.append("• `/importattendance` - CSV")
-        await interaction.response.send_message("\n".join(lines), ephemeral=True)
+        await interaction.followup.send("\\n".join(lines))
 
     @bot.tree.command(name="xid", description="View Discord ID")
     async def xid(interaction: discord.Interaction, member: discord.Member = None):
+        await interaction.response.defer(ephemeral=True)
         member = member or interaction.user
-        await interaction.response.send_message(f"🆔 {member.display_name}: `{member.id}`", ephemeral=True)
+        await interaction.followup.send(f"🆔 {member.display_name}: `{member.id}`")
 
     @bot.tree.command(name="whois", description="Look up user by ID")
     async def whois(interaction: discord.Interaction, user_id: str):
+        await interaction.response.defer(ephemeral=True)
         try:
             uid = int(user_id.strip())
             member = interaction.guild.get_member(uid)
             if member:
-                await interaction.response.send_message(f"👤 {member.display_name} (ID: {uid})\nJoined: {member.joined_at}", ephemeral=True)
+                await interaction.followup.send(f"👤 {member.display_name} (ID: {uid})\\nJoined: {member.joined_at}")
             else:
-                await interaction.response.send_message(f"❌ User {uid} not in server.", ephemeral=True)
+                await interaction.followup.send(f"❌ User {uid} not in server.")
         except ValueError:
-            await interaction.response.send_message("❌ Invalid ID", ephemeral=True)
-
+            await interaction.followup.send("❌ Invalid ID")
