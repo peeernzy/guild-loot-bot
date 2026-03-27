@@ -11,13 +11,15 @@ COMMAND_DETAILS = {
     "claimsleaderboard": "View the current list of active loot claims.",
     "bidsleaderboard": "View the current bidding standings.",
     "history": "View recent winners history.",
+    "transfer": "Transfer your points to another player.",
+    "claimwinner": "Roll 1-100 spin to pick claim winner with ranking.",
     "allclanpoints": "Show all clan member points balances.",
     "setpointlimit": "Set weekly point spending limit.",
     "price": "Check item prices.",
     "xid": "Display your Discord ID or another member's ID.",
     "whois": "Look up a member using their Discord ID.",
     "getids": "Generate the member ID list for attendance tracking.",
-    "exportids": "Export saved member IDs for record keeping.",
+    "expitems": "Export loot items to CSV.",
     "importattendance": "Upload and process attendance records.",
     "listevents": "View the list of configured guild events.",
     "setevent": "Create or update the active event setup.",
@@ -26,21 +28,10 @@ COMMAND_DETAILS = {
     "clearclaims": "Remove expired loot claims.",
     "cls": "Clear all messages in current channel.",
     "impitems": "Import loot items from CSV with backup.",
-    "expitems": "Export loot items to CSV.",
     "grant": "Grant a loot item directly (admin).",
     "reset": "Reset bot tracking data when needed.",
     "summary": "Guild event summary.",
-    "attendance": "Mark attendance.",
-    "setpointlimit": "Set point limit.",
-    "price": "Check item price.",
-    "claim": "Claim loot item.",
-    "bid": "Place bid on item.",
-    "items": "View loot shop.",
-    "leaderboard": "View points leaderboard.",
-    "history": "Recent winners.",
 }
-
-
 
 def setup(bot):
     @bot.tree.command(name="masterlist", description="Full list of all slash commands")
@@ -53,9 +44,11 @@ def setup(bot):
             "items - Loot shop",
             "claim [code] - Claim item",
             "bid [code] [amount] - Bid points",
-            "history [limit] - Recent winners (GMT+8)",
+            "history [limit] - Recent winners",
             "claimsleaderboard - Active claims",
-            "bidsleaderboard - Bid standings"
+            "bidsleaderboard - Bid standings",
+            "transfer [@player pts] - Send points",
+            "claimwinner [item] - Spin winner"
         ]
         desc += " • " + "\n • ".join(user_cmds) + "\n\n"
         
@@ -80,22 +73,17 @@ def setup(bot):
 
     @bot.tree.command(name="cmd", description="View user commands")
     async def cmd(interaction: discord.Interaction):
-        all_cmds = [cmd.name for cmd in bot.tree.get_commands()]
-        admin_cmds = {
-            "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance", "importattendance",
-            "listevents", "setevent", "endbid", "award", "clearclaims", "cls", "impitems", "expitems",
-            "reset", "setpointlimit", "xid", "whois", "acmd", "summary", "attendance"
-        }
-        user_cmds = [c for c in all_cmds if c not in admin_cmds]
-        gameplay = [f"/{c}" for c in user_cmds if c in {"points", "leaderboard", "items", "claim", "bid", "claimsleaderboard", "bidsleaderboard", "history"}]
-        info = [f"/{c}" for c in user_cmds if c in {"allclanpoints", "price", "summary"}]
-        lines = ["## User Commands", ""]
-        if gameplay:
-            lines.append("🎮 Gameplay")
-            lines.extend(f"• {cmd}: {COMMAND_DETAILS.get(cmd[1:], '?')}" for cmd in gameplay)
-        if info:
-            lines.append("📊 Info")
-            lines.extend(f"• {cmd}: {COMMAND_DETAILS.get(cmd[1:], '?')}" for cmd in info)
+        lines = ["**User Commands:**"]
+        lines.append("• `/points` - Balance")
+        lines.append("• `/leaderboard` - Top players")
+        lines.append("• `/items` - Loot shop")
+        lines.append("• `/claim [code]` - Claim item")
+        lines.append("• `/bid [code] [pts]` - Bid")
+        lines.append("• `/history` - Winners")
+        lines.append("• `/claimsleaderboard` - Claims")
+        lines.append("• `/bidsleaderboard` - Bids")
+        lines.append("• `/transfer @player pts` - Send pts")
+        lines.append("• `/claimwinner [item]` - Spin winner")
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
     @bot.tree.command(name="acmd", description="View admin commands")
@@ -105,26 +93,14 @@ def setup(bot):
         if not has_permission:
             await interaction.response.send_message("❌ Admin only.", ephemeral=True)
             return
-        all_cmds = [cmd.name for cmd in bot.tree.get_commands()]
-        admin_cmds = {
-            "addpoints", "refundpoints", "grant", "getids", "exportids", "importattendance",
-            "listevents", "setevent", "endbid", "award", "clearclaims", "cls", "impitems", "expitems",
-            "reset", "setpointlimit", "xid", "whois"
-        }
-        cmds = [c for c in all_cmds if c in admin_cmds]
-        points = [f"/{c}" for c in cmds if c in {"addpoints", "refundpoints"}]
-        loot = [f"/{c}" for c in cmds if c in {"grant", "endbid", "award", "clearclaims"}]
-        system = [f"/{c}" for c in cmds if c in {"cls", "reset", "impitems"}]
-        lines = ["## Admin Commands", ""]
-        if points:
-            lines.append("💰 Points")
-            lines.extend(f"• {cmd}: {COMMAND_DETAILS.get(cmd[1:], '?')}" for cmd in points)
-        if loot:
-            lines.append("🎁 Loot")
-            lines.extend(f"• {cmd}: {COMMAND_DETAILS.get(cmd[1:], '?')}" for cmd in loot)
-        if system:
-            lines.append("⚙️ System")
-            lines.extend(f"• {cmd}: {COMMAND_DETAILS.get(cmd[1:], '?')}" for cmd in system)
+        lines = ["**Admin Commands:**"]
+        lines.append("• `/addpoints`/`refundpoints` - Points mgmt")
+        lines.append("• `/impitems`/`expitems` - Item lists")
+        lines.append("• `/endbid`/`award`/`clearclaims` - Loot")
+        lines.append("• `/reset`/`setpointlimit` - Settings")
+        lines.append("• `/cls` - Clear channel")
+        lines.append("• `/getids`/`listevents`/`setevent` - Events")
+        lines.append("• `/importattendance` - CSV")
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
     @bot.tree.command(name="xid", description="View Discord ID")
