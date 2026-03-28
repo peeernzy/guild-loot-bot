@@ -92,11 +92,8 @@ def setup(bot):
                                 player_index = (player_index + 1) % n_players
                             
                             player = participants[player_index]
-                            # Batch size: 2–3 normally, but allow 3–4 if needed
-                            if qty_left >= 4:
-                                give_count = random.randint(3, 4)
-                            else:
-                                give_count = min(qty_left, random.randint(2, 3))
+                            # Batch size: strictly 2–4
+                            give_count = min(qty_left, random.randint(2, 4))
                             
                             dist[player].extend([item["name"]] * give_count)
                             qty_left -= give_count
@@ -108,21 +105,58 @@ def setup(bot):
                             player_index = (player_index + 1) % n_players
                     
                     elif rarity in {"common", "uncommon"}:
-                        # Common/Uncommon materials → whole stack to one player
-                        player = participants[player_index]
-                        dist[player].extend([item["name"]] * item["quantity"])
-                        
-                        # Advance snake index once
-                        if direction_forward:
-                            player_index += 1
-                            if player_index == n_players:
+                        if item["quantity"] > 4:
+                            # Split stack into halves
+                            half1 = item["quantity"] // 2
+                            half2 = item["quantity"] - half1
+
+                            # First player gets half1
+                            player1 = participants[player_index]
+                            dist[player1].extend([item["name"]] * half1)
+
+                            # Advance snake index
+                            if direction_forward:
+                                player_index += 1
+                                if player_index == n_players:
+                                    player_index -= 1
+                                    direction_forward = False
+                            else:
                                 player_index -= 1
-                                direction_forward = False
+                                if player_index < 0:
+                                    player_index = 0
+                                    direction_forward = True
+
+                            # Second player gets half2
+                            player2 = participants[player_index]
+                            dist[player2].extend([item["name"]] * half2)
+
+                            # Advance snake index again
+                            if direction_forward:
+                                player_index += 1
+                                if player_index == n_players:
+                                    player_index -= 1
+                                    direction_forward = False
+                            else:
+                                player_index -= 1
+                                if player_index < 0:
+                                    player_index = 0
+                                    direction_forward = True
                         else:
-                            player_index -= 1
-                            if player_index < 0:
-                                player_index = 0
-                                direction_forward = True
+                            # Whole stack to one player
+                            player = participants[player_index]
+                            dist[player].extend([item["name"]] * item["quantity"])
+
+                            # Advance snake index once
+                            if direction_forward:
+                                player_index += 1
+                                if player_index == n_players:
+                                    player_index -= 1
+                                    direction_forward = False
+                            else:
+                                player_index -= 1
+                                if player_index < 0:
+                                    player_index = 0
+                                    direction_forward = True
             
             # Results
             total_items = sum(item["quantity"] for item in items)
@@ -130,7 +164,7 @@ def setup(bot):
             
             for player, loot in dist.items():
                 counts = Counter(loot)
-                loot_text = ', '.join(
+                loot_text = '\n'.join(
                     f"{item}({qty})" if qty > 1 else item
                     for item, qty in counts.items()
                 )
@@ -147,7 +181,7 @@ def setup(bot):
                     loot_items = list(counts.items())
                     for start in range(0, len(loot_items), chunk_size):
                         chunk = loot_items[start:start+chunk_size]
-                        chunk_text = ', '.join(
+                        chunk_text = '\n'.join(
                             f"{item}({qty})" if qty > 1 else item
                             for item, qty in chunk
                         )
@@ -165,7 +199,7 @@ def setup(bot):
             csv_lines = ["Player,Count,Items"]
             for p, l in dist.items():
                 counts = Counter(l)
-                grouped_items = ','.join(
+                grouped_items = '\n'.join(
                     f"{item}({qty})" if qty > 1 else item
                     for item, qty in counts.items()
                 )
