@@ -5,7 +5,7 @@ COMMAND_DETAILS = {
     "addpoints": "Add points to a member account (admin).",
     "refundpoints": "Deduct points from a member (admin).",
     "leaderboard": "See the current guild rankings by points.",
-"inventory": "Browse the available loot items and rewards.",
+    "inventory": "Browse the available loot items and rewards.",
     "inventory_list": "Simple table of all loot items (code/name/cost/rule/stock/rarity).",
     "stock": "Check single item stock.",
     "restock": "Restock item stock (Mod/Elder).",
@@ -48,7 +48,7 @@ USER_CMDS = {
     "claim": COMMAND_DETAILS["claim"],
     "claimcancel": COMMAND_DETAILS["claimcancel"],
     "bid": COMMAND_DETAILS["bid"],
-"bidcancel": COMMAND_DETAILS["bidcancel"],
+    "bidcancel": COMMAND_DETAILS["bidcancel"],
     "claimsleaderboard": COMMAND_DETAILS["claimsleaderboard"],
     "bidsleaderboard": COMMAND_DETAILS["bidsleaderboard"],
     "history": COMMAND_DETAILS["history"],
@@ -89,7 +89,8 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-value="`/inventory` - Browse loot shop\\n`/inventory_list` - Full table\\n`/stock [code]` - Item stock\\n`/claim [code]` - Claim\\n`/bid [code] [pts]` - Bid\\n`/claimcancel [code]` - Cancel claim\\n`/bidcancel [code]` - Cancel bid\\n`/points` - Balance\\n`/leaderboard` - Top players\\n`/history` - Winners\\n`/transfer @player [pts]` - Send points\\n`/claimsleaderboard` - Claims list\\n`/bidsleaderboard` - Bids list",\\n            inline=False
+            value="`/inventory` - Browse loot shop\n`/inventory_list` - Full table\n`/stock [code]` - Item stock\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid\n`/points` - Balance\n`/leaderboard` - Top players\n`/history` - Winners\n`/transfer @player [pts]` - Send points\n`/claimsleaderboard` - Claims list\n`/bidsleaderboard` - Bids list",
+            inline=False
         )
         
         embed.add_field(
@@ -113,7 +114,7 @@ value="`/inventory` - Browse loot shop\\n`/inventory_list` - Full table\\n`/stoc
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
         embed.add_field(
             name="Loot Actions",
-value="`/inventory` - Shop
+            value="`/inventory` - Shop\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid",
             inline=False
         )
         embed.add_field(
