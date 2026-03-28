@@ -89,7 +89,7 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-            value="`/items` - Browse loot shop\n`/itemlist` - Full table\n`/stock [code]` - Item stock\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid\n`/points` - Balance\n`/leaderboard` - Top players\n`/history` - Winners\n`/transfer @player [pts]` - Send points\n`/claimsleaderboard` - Claims list\n`/bidsleaderboard` - Bids list",
+value="`/inventory` - Browse loot shop
             inline=False
         )
         
@@ -114,7 +114,7 @@ def setup(bot):
         embed = discord.Embed(title="🎮 User Commands", color=discord.Color.green())
         embed.add_field(
             name="Loot Actions",
-            value="`/items` - Shop\n`/claim [code]` - Claim\n`/bid [code] [pts]` - Bid\n`/claimcancel [code]` - Cancel claim\n`/bidcancel [code]` - Cancel bid",
+value="`/inventory` - Shop
             inline=False
         )
         embed.add_field(
