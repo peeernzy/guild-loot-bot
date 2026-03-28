@@ -4,91 +4,137 @@ import csv
 import random
 import io
 
-rarity_order = {"common":1,"uncommon":2,"rare":3,"epic":4,"legend":5,"mythic":6}
-rarity_emojis = {"common":"⚪","uncommon":"🟢","rare":"🔵","epic":"🔴","legend":"🟡","mythic":"🟣"}
+# Rarity priority and emojis
+RARITY_ORDER = {"common":1, "uncommon":2, "rare":3, "epic":4, "legend":5, "mythic":6}
+RARITY_EMOJIS = {"common":"⚪", "uncommon":"🟢", "rare":"🔵", "epic":"🔴", "legend":"🟡", "mythic":"🟣"}
 
 def setup(bot):
-    @bot.tree.command(name="distribute", description="Distribute loot raid - PUBLIC")
-    @app_commands.describe(participants_file="Raiders CSV", items_csv="Loot CSV")
+    @bot.tree.command(name="distribute", description="🎲 Fair loot distribution for raids (Mod/Elder)")
+    @app_commands.describe(
+        participants_file="CSV or TXT with raider names (one per line)",
+        items_csv="CSV: loot,stock,rarity,type (header optional)"
+    )
     async def distribute_cmd(interaction: discord.Interaction, participants_file: discord.Attachment, items_csv: discord.Attachment):
-        if not any(r.name in {"Moderator","Elder"} for r in interaction.user.roles):
-            await interaction.response.send_message("❌ Mod only", ephemeral=True)
-            return
+        # Permission check
+        if not any(role.name in {"Moderator", "Elder"} for role in interaction.user.roles):
+            return await interaction.response.send_message("❌ Moderator/Elder only", ephemeral=True)
+        
         await interaction.response.defer()
+        
         try:
-            p_data = await participants_file.read()
-            participants = [line.strip() for line in p_data.decode().splitlines() if line.strip()]
-            if not participants:
-                await interaction.followup.send("❌ No participants")
-                return
-
-            i_data = await items_csv.read()
-            i_text = i_data.decode()
+            # ========== PARSE PARTICIPANTS ==========
+            p_bytes = await participants_file.read()
+            p_text = p_bytes.decode('utf-8', errors='ignore')
+            participants = [line.strip() for line in p_text.splitlines() if line.strip()]
             
-            # Parse items - header "MIDDLE HORN" style
-            reader = csv.reader(i_text.splitlines())
+            if len(participants) == 0:
+                return await interaction.followup.send("❌ **No participants found**\nAdd names (one per line)")
+            
+            # ========== PARSE ITEMS ==========
+            i_bytes = await items_csv.read()
+            i_text = i_bytes.decode('utf-8', errors='ignore')
             items = []
-            for row in reader:
-                if len(row) >= 4 and row[0].strip():
-                    name = row[0].strip()
-                    try:
-                        qty = int(row[1])
-                        rar = row[2].strip()
-                        typ = row[3].strip().lower()
-                        if qty > 0:
-                            items.append({"name":name, "rarity":rar, "quantity":qty, "type":typ})
-                    except:
-                        pass
-
-            if not items:
-                await interaction.followup.send("❌ No loot parsed - check CSV")
-                return
-
-            dist = {p:[] for p in participants}
             
-            equip = [i for i in items if "equip" in i["type"]]
-            for item in sorted(equip, key=lambda x:rarity_order.get(x["rarity"],0), reverse=True):
-                cycle = participants[:]
+            reader = csv.reader(i_text.splitlines())
+            row_num = 0
+            for row in reader:
+                row_num += 1
+                if len(row) < 3 or not row[0].strip():
+                    continue  # Skip empty rows
+                
+                try:
+                    name = row[0].strip()
+                    qty = int(row[1].strip())
+                    rarity = row[2].strip()
+                    item_type = row[3].strip().lower() if len(row) > 3 else "material"
+                    
+                    if qty > 0 and name:
+                        items.append({
+                            "name": name,
+                            "rarity": rarity,
+                            "quantity": qty, 
+                            "type": item_type
+                        })
+                except (ValueError, IndexError):
+                    continue  # Skip invalid rows
+            
+            if len(items) == 0:
+                return await interaction.followup.send("❌ **No valid loot found**\nFormat: `MIDDLE HORN,3,rare,consumable`")
+            
+            # ========== FAIR DISTRIBUTION ==========
+            distribution = {player: [] for player in participants}
+            
+            # 1. EQUIPMENT - STRICT 1 PER PLAYER
+            equipment = [it for it in items if 'equip' in it["type"]]
+            for item in sorted(equipment, key=lambda x: RARITY_ORDER.get(x["rarity"], 0), reverse=True):
+                cycle = participants.copy()
                 random.shuffle(cycle)
-                for j in range(item["quantity"]):
-                    dist[cycle[j % len(cycle)]].append(item["name"])
-
-            mats = [i for i in items if "equip" not in i["type"]]
-            for item in sorted(mats, key=lambda x:rarity_order.get(x["rarity"],0), reverse=True):
+                for i in range(item["quantity"]):
+                    player = cycle[i % len(cycle)]
+                    distribution[player].append(item["name"])
+            
+            # 2. MATERIALS - NORMAL ROUND ROBIN (multi OK)
+            materials = [it for it in items if 'equip' not in it["type"]]
+            for item in sorted(materials, key=lambda x: RARITY_ORDER.get(x["rarity"], 0), reverse=True):
                 random.shuffle(participants)
-                j = 0
+                i = 0
                 for _ in range(item["quantity"]):
-                    dist[participants[j % len(participants)]].append(item["name"])
-                    j += 1
-
-            embed = discord.Embed(title="🏆 RAID COMPLETE", color=0x00ff00)
-            lines = []
-            total = sum(i["quantity"] for i in items)
-            for p, l in dist.items():
-                n = len(l)
-                if n:
-                    show = []
-                    for name in l[:5]:
-                        r = next((it["rarity"] for it in items if it["name"]==name),"common")
-                        show.append(rarity_emojis.get(r,"⚪") + name[:10])
-                    txt = " | ".join(show)
-                    if n > 5: txt += f" +{n-5}"
-                    lines.append(f"**{p}** ({n}): {txt}")
+                    player = participants[i % len(participants)]
+                    distribution[player].append(item["name"])
+                    i += 1
+            
+            # ========== PUBLIC EMBED ==========
+            embed = discord.Embed(title="🏆 **RAID LOOT DISTRIBUTION**", color=discord.Color.green())
+            
+            # Results table
+            result_lines = []
+            total_loot = sum(item["quantity"] for item in items)
+            
+            for player, player_loot in distribution.items():
+                count = len(player_loot)
+                if count > 0:
+                    # Show top 4 items with emojis
+                    preview_loot = []
+                    for loot_name in player_loot[:4]:
+                        loot_rarity = next((it["rarity"] for it in items if it["name"] == loot_name), "common")
+                        emoji = RARITY_EMOJIS.get(loot_rarity, "⚪")
+                        preview_loot.append(f"{emoji} `{loot_name}`")
+                    
+                    loot_display = " | ".join(preview_loot)
+                    if count > 4:
+                        loot_display += f" **+{count - 4} more**"
+                    
+                    result_lines.append(f"⚔️ **{player}** `({count})` {loot_display}")
                 else:
-                    lines.append(f"**{p}** 0")
-            embed.description = "\n".join(lines)
-            embed.set_footer(text=f"Total loot: {total}")
-
-            out = io.StringIO()
-            cw = csv.writer(out)
-            cw.writerow(["player","loot"])
-            for p, l in dist.items():
-                cw.writerow([p, ", ".join(l)])
-            f = discord.File(io.BytesIO(out.getvalue().encode()), "raid_loot.csv")
-
-            await interaction.followup.send(embed=embed, files=[f])
-
-        except Exception as e:
-            await interaction.followup.send(f"❌ {str(e)}")
+                    result_lines.append(f"💀 **{player}** `(0)`")
+            
+            embed.add_field(
+                name=f"**RAID RESULTS** ({len(participants)} raiders)",
+                value="\n".join(result_lines),
+                inline=False
+            )
+            
+            embed.set_footer(text=f"📦 Total loot distributed: {total_loot} items")
+            
+            # ========== DOWNLOAD CSV ==========
+            output_buffer = io.StringIO()
+            csv_writer = csv.writer(output_buffer)
+            csv_writer.writerow(["player", "loot_items"])
+            
+            for player, player_loot in distribution.items():
+                loot_list = []
+                for loot_name in player_loot:
+                    loot_rarity = next((it["rarity"] for it in items if it["name"] == loot_name), "common")
+                    emoji = RARITY_EMOJIS.get(loot_rarity, "")
+                    loot_list.append(f"{emoji}{loot_name}")
+                csv_writer.writerow([player, "; ".join(loot_list)])
+            
+            csv_bytes = output_buffer.getvalue().encode('utf-8')
+            loot_file = discord.File(io.BytesIO(csv_bytes), filename="raid_loot.csv")
+            
+            await interaction.followup.send(embed=embed, file=loot_file)
+            
+        except Exception as error:
+            await interaction.followup.send(f"💥 **Raid failed** - `{str(error)[:150]}`")
 
 
