@@ -35,8 +35,8 @@ def _validate_rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
             errors.append(f"Row {index}: code, name, cost, rule required.")
             continue
 
-        if rarity not in ["common", "uncommon", "rare", "legendary"]:
-            errors.append(f"Row {index}: rarity must be common/uncommon/rare/legendary.")
+        if rarity not in ["common", "uncommon", "rare", "epic", "legend", "mythic"]:
+            errors.append(f"Row {index}: rarity must be common/uncommon/rare/epic/legend/mythic.")
             continue
 
         try:
