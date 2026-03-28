@@ -30,5 +30,7 @@ def setup(bot):
                 conn.commit()
         print("Items table cleared")
 
-        await interaction.response.send_message("🗑️ **INVENTORY CLEARED** - items wiped only!")
+        reload_loot_items()
+
+        await interaction.response.send_message("🗑️ **INVENTORY CLEARED** - items wiped + reloaded! `/checkitemstore` now 0")
         print(f"[RESET] {interaction.user} cleared items")

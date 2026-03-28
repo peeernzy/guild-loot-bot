@@ -36,8 +36,8 @@ def truncate_table(lines: list[str], header_title: str, max_len: int = 1010) -> 
 
 def setup(bot):
     @app_commands.describe(filter="common/uncommon/rare/epic/legend/mythic/points/all")
-    @bot.tree.command(name="items", description="Loot shop - fancy view by filter (no rule column)")
-    async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
+    @bot.tree.command(name="inventory", description="Loot shop - fancy view by filter (no rule column)")
+    async def inventory_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()
 
@@ -83,7 +83,7 @@ def setup(bot):
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
-        embed.set_footer(text="`/itemlist` table | `/checkitemstore` | `/points` | `/restock` | `/impitems`")
+        embed.set_footer(text="`/inventory_list` table | `/checkitemstore` | `/points` | `/inventory_restock` | `/inventory_import`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -106,15 +106,15 @@ def setup(bot):
         )
         embed.add_field(
             name="Commands", 
-            value="`/items` | `/itemlist`", 
+            value="`/inventory` | `/inventory_list`", 
             inline=True
         )
         embed.set_footer(text="Reload: `/reloaditems` | Import: `/impitems`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="itemlist", description="Loot table (no rule column)")
-    async def itemlist_cmd(interaction: discord.Interaction):
+    @bot.tree.command(name="inventory_list", description="Loot table (no rule column)")
+    async def inventory_list_cmd(interaction: discord.Interaction):
         embed = discord.Embed(title="📋 Loot Masterlist", color=discord.Color.blurple())
         
         claim_lines = []
@@ -142,7 +142,7 @@ def setup(bot):
             bid_table = truncate_table(bid_lines, "BID | CODE | NAME | COST | STOCK | RARITY")
             embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
         
-        embed.set_footer(text="`/items` fancy | `/checkitemstore` | `/impitems` CSV | `/expitems` export")
+        embed.set_footer(text="`/inventory` fancy | `/checkitemstore` | `/inventory_import` CSV | `/inventory_export` export")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:

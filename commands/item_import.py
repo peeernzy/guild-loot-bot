@@ -133,9 +133,9 @@ def _save_loot_items_db(items: list[dict]):
 
 
 def setup(bot):
-    @bot.tree.command(name="impitems", description="Import loot items from CSV (code,name,cost,rule,stock,rarity)")
+@bot.tree.command(name="inventory_import", description="Import loot items from CSV (code,name,cost,rule,stock,rarity)")
     @app_commands.describe(force="Ignore active claim/bid warnings")
-    async def import_items_cmd(interaction: discord.Interaction, file: discord.Attachment, force: bool = False):
+    async def inventory_import_cmd(interaction: discord.Interaction, file: discord.Attachment, force: bool = False):
         allowed_roles = {"Moderator", "Elder"}
         has_permission = any(role.name in allowed_roles for role in interaction.user.roles)
 
