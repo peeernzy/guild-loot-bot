@@ -27,7 +27,7 @@ def setup(bot):
     @bot.tree.command(name="distribute", description="Distribute loot fairly - PUBLIC (Mod/Elder)")
     @app_commands.describe(
         participants_file="participants.csv (name column)",
-        items_csv="items.csv (loot,stock,rarity) - YOUR FORMAT!"
+        items_csv="items.csv (loot,stock,rarity,type) - equipment/material"
     )
     async def distribute_cmd(interaction: discord.Interaction,
                            participants_file: discord.Attachment,
@@ -61,10 +61,11 @@ def setup(bot):
                 for row in items_reader:
                     name = row["loot"].strip()
                     rarity = row["rarity"].strip()
+                    item_type = row.get("type", "material").strip().lower()
                     try:
                         quantity = int(row["stock"])
                         if name and quantity > 0:
-                            items.append({"name": name, "rarity": rarity, "quantity": quantity})
+                            items.append({"name": name, "rarity": rarity, "quantity": quantity, "type": item_type})
                     except:
                         pass
             else:
@@ -84,9 +85,21 @@ def setup(bot):
 
             # Round-robin distribution (rarity priority)
             distribution = {p: [] for p in participants}
-            items_sorted = sorted(items, key=lambda x: rarity_order.get(x["rarity"], 99), reverse=True)
+            # Group by type/priority
+            equipment_items = [i for i in items if i.get("type") == "equipment"]
+            material_items = [i for i in items if i.get("type") != "equipment"]
 
-            for item in items_sorted:
+            # EQUIPMENT FIRST - strict round robin
+            for item in sorted(equipment_items, key=lambda x: rarity_order.get(x["rarity"], 99), reverse=True):
+                participants_copy = participants.copy()
+                random.shuffle(participants_copy)
+                p_index = 0
+                for _ in range(item["quantity"]):
+                    distribution[participants_copy[p_index % len(participants_copy)]].append(item["name"])
+                    p_index += 1
+
+            # MATERIALS - multiple OK, normal round robin
+            for item in sorted(material_items, key=lambda x: rarity_order.get(x["rarity"], 99), reverse=True):
                 random.shuffle(participants)
                 p_index = 0
                 for _ in range(item["quantity"]):
