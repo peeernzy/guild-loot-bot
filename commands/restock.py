@@ -1,9 +1,6 @@
 import discord
-import json
-from pathlib import Path
 from .loot import loot_meta, reload_loot_items, claim_aliases, bid_aliases
-
-LOOT_ITEMS_FILE = Path("loot_items.json")
+from .points import using_postgres, get_sqlite_connection, get_postgres_connection
 
 def find_item(name_or_code):
     """Find item name by name or code/alias lookup."""
@@ -17,33 +14,6 @@ def find_item(name_or_code):
         if item_lookup in alias_map:
             return alias_map[item_lookup]
     return None
-
-def update_stock(item_name, qty_change):
-    """Update stock for item, persist to JSON."""
-    try:
-        with open(LOOT_ITEMS_FILE, 'r') as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        return False, "loot_items.json not found."
-
-    items = data.get('items', [])
-    updated = False
-    for item in items:
-        if item['name'] == item_name:
-            old_stock = item.get('stock', 999)
-            item['stock'] = max(0, old_stock + qty_change)
-            updated = True
-            break
-
-    if not updated:
-        return False, f"Item '{item_name}' not found."
-
-    with open(LOOT_ITEMS_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
-
-    # Reload globals
-    reload_loot_items()
-    return True, f"✅ {item_name} stock: {old_stock} → {item['stock']}"
 
 def get_stock(item_name):
     """Get current stock."""
@@ -80,8 +50,28 @@ def setup(bot):
             await interaction.followup.send(f"❌ Item '{item}' not found. Use `/items`.")
             return
 
-        success, msg = update_stock(target_item, qty)
-        if success:
-            await interaction.followup.send(msg)
+        # Update DB stock
+        old_stock = get_stock(target_item)
+        if using_postgres():
+            with get_postgres_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("UPDATE items SET stock = GREATEST(0, stock + %s) WHERE name = %s", (qty, target_item))
+                    changed = cur.rowcount > 0
+                    cur.execute("SELECT stock FROM items WHERE name = %s", (target_item,))
+                    new_stock = cur.fetchone()[0]
+            conn.commit()
         else:
-            await interaction.followup.send(msg)
+            with get_sqlite_connection() as conn:
+                cur = conn.cursor()
+                cur.execute("UPDATE items SET stock = MAX(0, stock + ?) WHERE name = ?", (qty, target_item))
+                changed = cur.rowcount > 0
+                cur.execute("SELECT stock FROM items WHERE name = ?", (target_item,))
+                new_stock = cur.fetchone()[0]
+            conn.commit()
+
+        if not changed:
+            await interaction.followup.send(f"❌ Item '{target_item}' not in DB.")
+            return
+
+        reload_loot_items()
+        await interaction.followup.send(f"✅ **{target_item}** stock: {old_stock} → **{new_stock}** (DB updated, persists restart)")
