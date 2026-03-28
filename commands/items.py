@@ -50,10 +50,11 @@ def setup(bot):
             rarity = loot_meta[name].get("rarity", "common")
             
             # Filter
-            if filter != "all":
-                if filter == "points" and loot_costs.get(name, {}).get("cost", 0) > user_pts:
-                    continue
+            if filter != "all" and filter != "points":
                 if rarity != filter:
+                    continue
+            elif filter == "points":
+                if loot_costs.get(name, {}).get("cost", 0) > user_pts:
                     continue
             
             cost = loot_costs.get(name, {}).get("cost", 0)
