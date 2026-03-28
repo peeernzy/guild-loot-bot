@@ -4,6 +4,7 @@ import csv
 import io
 import math
 import random
+from collections import Counter
 
 RARITY_ORDER = {"common":1, "uncommon":2, "rare":3, "epic":4, "legend":5, "mythic":6}
 
@@ -128,7 +129,12 @@ def setup(bot):
             avg_per_player = math.ceil(total_items / n_players)
             
             for player, loot in dist.items():
-                loot_text = ', '.join(loot)
+                counts = Counter(loot)
+                loot_text = ', '.join(
+                    f"{item}({qty})" if qty > 1 else item
+                    for item, qty in counts.items()
+                )
+                
                 title = f"🎒 {player} ({len(loot)}/{avg_per_player})"
                 embed = discord.Embed(title=title, color=0x00ff88)
                 
@@ -138,10 +144,14 @@ def setup(bot):
                 else:
                     # Split by chunks of 12 items
                     chunk_size = 12
-                    for start in range(0, len(loot), chunk_size):
-                        chunk = loot[start:start+chunk_size]
-                        chunk_text = ', '.join(chunk)
-                        chunk_title = f"🎒 {player} ({start+1}-{min(start+chunk_size, len(loot))}/{len(loot)})"
+                    loot_items = list(counts.items())
+                    for start in range(0, len(loot_items), chunk_size):
+                        chunk = loot_items[start:start+chunk_size]
+                        chunk_text = ', '.join(
+                            f"{item}({qty})" if qty > 1 else item
+                            for item, qty in chunk
+                        )
+                        chunk_title = f"🎒 {player} ({start+1}-{min(start+chunk_size, len(loot_items))}/{len(loot_items)})"
                         chunk_embed = discord.Embed(title=chunk_title, color=0x00ff88)
                         chunk_embed.description = f"```{chunk_text}```"
                         await interaction.followup.send(chunk_embed)
@@ -154,7 +164,13 @@ def setup(bot):
             
             csv_lines = ["Player,Count,Items"]
             for p, l in dist.items():
-                csv_lines.append(f'"{p}",{len(l)},"{",".join(l)}"')
+                counts = Counter(l)
+                grouped_items = ','.join(
+                    f"{item}({qty})" if qty > 1 else item
+                    for item, qty in counts.items()
+                )
+                csv_lines.append(f'"{p}",{len(l)},"{grouped_items}"')
+            
             csv_data = "\n".join(csv_lines)
             csv_file = discord.File(io.BytesIO(csv_data.encode()), "fair_loot.csv")
             
