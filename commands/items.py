@@ -36,7 +36,7 @@ def truncate_table(lines: list[str], header_title: str, max_len: int = 1010) -> 
 
 def setup(bot):
     @app_commands.describe(filter="common/uncommon/rare/epic/legend/mythic/points/all")
-    @bot.tree.command
+    @bot.tree.command(name="items", description="Loot shop - fancy view by filter (no rule column)")
     async def items_cmd(interaction: discord.Interaction, filter: str = "all"):
         user_pts = get_points(interaction.user.id)
         filter = filter.lower().strip()
