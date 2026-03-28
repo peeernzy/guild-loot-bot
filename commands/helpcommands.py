@@ -89,8 +89,7 @@ def setup(bot):
         
         embed.add_field(
             name="🎮 User Commands",
-value="`/inventory` - Browse loot shop
-            inline=False
+value="`/inventory` - Browse loot shop\\n`/inventory_list` - Full table\\n`/stock [code]` - Item stock\\n`/claim [code]` - Claim\\n`/bid [code] [pts]` - Bid\\n`/claimcancel [code]` - Cancel claim\\n`/bidcancel [code]` - Cancel bid\\n`/points` - Balance\\n`/leaderboard` - Top players\\n`/history` - Winners\\n`/transfer @player [pts]` - Send points\\n`/claimsleaderboard` - Claims list\\n`/bidsleaderboard` - Bids list",\\n            inline=False
         )
         
         embed.add_field(
