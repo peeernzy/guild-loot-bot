@@ -3,6 +3,7 @@ from discord import app_commands
 import csv
 import io
 import math
+import random
 
 RARITY_ORDER = {"common":1, "uncommon":2, "rare":3, "epic":4, "legend":5, "mythic":6}
 
@@ -41,27 +42,86 @@ def setup(bot):
             if not items:
                 return await interaction.followup.send("❌ No loot items")
             
-            # Sort by rarity DESC
-            items.sort(key=lambda x: RARITY_ORDER.get(x["rarity"], 0), reverse=True)
+            # Sort: equipment first, then rarity DESC
+            items.sort(
+                key=lambda x: (
+                    0 if x["type"] == "equipment" else 1,
+                    -RARITY_ORDER.get(x["rarity"], 0)
+                )
+            )
             
             # Distribution
             dist = {p: [] for p in participants}
+            player_index = 0
+            direction_forward = True
             
-            # Snake draft: reset index per item
-            round_num = 0
             for item in items:
-                direction_forward = round_num % 2 == 0
-                player_indices = list(range(n_players))
-                if not direction_forward:
-                    player_indices.reverse()
+                if item["type"] == "equipment":
+                    # Equipment → snake draft
+                    for q in range(item["quantity"]):
+                        player = participants[player_index]
+                        dist[player].append(item["name"])
+                        
+                        # Snake movement
+                        if direction_forward:
+                            player_index += 1
+                            if player_index == n_players:
+                                player_index -= 1
+                                direction_forward = False
+                        else:
+                            player_index -= 1
+                            if player_index < 0:
+                                player_index = 0
+                                direction_forward = True
                 
-                # Distribute this item's quantity in snake order
-                for q in range(item["quantity"]):
-                    p_idx = q % n_players
-                    player = participants[player_indices[p_idx]]
-                    dist[player].append(item["name"])
-                
-                round_num += 1
+                elif item["type"] == "material":
+                    rarity = item["rarity"]
+                    
+                    if rarity == "rare":
+                        qty_left = item["quantity"]
+                        rare_cycle = set()  # track who already got rare material in this cycle
+                        
+                        while qty_left > 0:
+                            # Reset cycle if everyone has received rare material
+                            if len(rare_cycle) == n_players:
+                                rare_cycle.clear()
+                            
+                            # Skip players who already got rare material in this cycle
+                            while participants[player_index] in rare_cycle:
+                                player_index = (player_index + 1) % n_players
+                            
+                            player = participants[player_index]
+                            # Batch size: 2–3 normally, but allow 3–4 if needed
+                            if qty_left >= 4:
+                                give_count = random.randint(3, 4)
+                            else:
+                                give_count = min(qty_left, random.randint(2, 3))
+                            
+                            dist[player].extend([item["name"]] * give_count)
+                            qty_left -= give_count
+                            
+                            # Mark player as having received rare material this cycle
+                            rare_cycle.add(player)
+                            
+                            # Move to next player
+                            player_index = (player_index + 1) % n_players
+                    
+                    elif rarity in {"common", "uncommon"}:
+                        # Common/Uncommon materials → whole stack to one player
+                        player = participants[player_index]
+                        dist[player].extend([item["name"]] * item["quantity"])
+                        
+                        # Advance snake index once
+                        if direction_forward:
+                            player_index += 1
+                            if player_index == n_players:
+                                player_index -= 1
+                                direction_forward = False
+                        else:
+                            player_index -= 1
+                            if player_index < 0:
+                                player_index = 0
+                                direction_forward = True
             
             # Results
             total_items = sum(item["quantity"] for item in items)
@@ -76,7 +136,7 @@ def setup(bot):
                     embed.description = f"```{loot_text}```"
                     await interaction.followup.send(embed=embed)
                 else:
-                    # Split
+                    # Split by chunks of 12 items
                     chunk_size = 12
                     for start in range(0, len(loot), chunk_size):
                         chunk = loot[start:start+chunk_size]
@@ -102,6 +162,3 @@ def setup(bot):
             
         except Exception as e:
             await interaction.followup.send(f"❌ {e}", ephemeral=True)
-
-
-
