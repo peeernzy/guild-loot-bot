@@ -41,10 +41,14 @@ restock.setup(bot)
 reloaditems.setup(bot)
 # ASYNC cogs loaded in on_ready(): cls, item_import, setpointlimit, price
 
-print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, setpointlimit, price")
+print("📦 Loaded command modules: points, loot, leaderboard, items, summary, reset, attendance, getids, helpcommands, welcome, goodbye, cls, item_import, item_export, claim, bid, history, setpointlimit, price, **distrib**")
 
 from commands.logger import initialize_history
 initialize_history()
+
+# Load distrib
+from commands import distrib
+distrib.setup(bot)
 
 
 # =========================
