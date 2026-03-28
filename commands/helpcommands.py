@@ -5,8 +5,8 @@ COMMAND_DETAILS = {
     "addpoints": "Add points to a member account (admin).",
     "refundpoints": "Deduct points from a member (admin).",
     "leaderboard": "See the current guild rankings by points.",
-    "items": "Browse the available loot items and rewards.",
-    "itemlist": "Simple table of all loot items (code/name/cost/rule/stock/rarity).",
+"inventory": "Browse the available loot items and rewards.",
+    "inventory_list": "Simple table of all loot items (code/name/cost/rule/stock/rarity).",
     "stock": "Check single item stock.",
     "restock": "Restock item stock (Mod/Elder).",
     "claim": "Claim an available loot item using its code.",
@@ -42,8 +42,8 @@ COMMAND_DETAILS = {
 
 USER_CMDS = {
     "points": COMMAND_DETAILS["points"],
-    "items": COMMAND_DETAILS["items"],
-    "itemlist": COMMAND_DETAILS["itemlist"],
+    "inventory": COMMAND_DETAILS["inventory"],
+    "inventory_list": COMMAND_DETAILS["inventory_list"],
     "stock": COMMAND_DETAILS["stock"],
     "claim": COMMAND_DETAILS["claim"],
     "claimcancel": COMMAND_DETAILS["claimcancel"],

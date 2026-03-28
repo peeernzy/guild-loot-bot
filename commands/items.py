@@ -83,12 +83,12 @@ def setup(bot):
             embed.add_field(name="⚔️ Bid", value=bid_table, inline=False)
 
         embed.description = f"💰 **Your Points: {user_pts}** | Filter: {filter}"
-        embed.set_footer(text="`/inventory_list` table | `/checkitemstore` | `/points` | `/inventory_restock` | `/inventory_import`")
+        embed.set_footer(text="`/inventory_list` table | `/inventory_check` | `/points` | `/inventory_restock` | `/inventory_import`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @bot.tree.command(name="checkitemstore", description="Check item store count (DB)")
-    async def checkitemstore_cmd(interaction: discord.Interaction):
+    @bot.tree.command(name="inventory_check", description="Check item store count (DB)")
+    async def inventory_check_cmd(interaction: discord.Interaction):
         total_items = len(loot_meta)
         claim_count = sum(1 for name in loot_meta if not loot_meta[name].get("is_bidding", False))
         bid_count = total_items - claim_count
@@ -109,7 +109,7 @@ def setup(bot):
             value="`/inventory` | `/inventory_list`", 
             inline=True
         )
-        embed.set_footer(text="Reload: `/reloaditems` | Import: `/impitems`")
+        embed.set_footer(text="Reload: `/inventory_reload` | Import: `/inventory_import`")
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -142,7 +142,7 @@ def setup(bot):
             bid_table = truncate_table(bid_lines, "BID | CODE | NAME | COST | STOCK | RARITY")
             embed.add_field(name=f"⚔️ Bid ({len(bid_lines)})", value=bid_table, inline=False)
         
-        embed.set_footer(text="`/inventory` fancy | `/checkitemstore` | `/inventory_import` CSV | `/inventory_export` export")
+        embed.set_footer(text="`/inventory` fancy | `/inventory_check` | `/inventory_import` CSV | `/inventory_export` export")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def get_emoji(name: str, rarity: str) -> str:
