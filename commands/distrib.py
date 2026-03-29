@@ -12,7 +12,7 @@ def setup(bot):
     @bot.tree.command(name="distribute", description="PERFECT BALANCED loot distribution")
     @app_commands.describe(participants_file="Players CSV (one name per line)", items_csv="Loot CSV")
     async def distribute_cmd(interaction: discord.Interaction, participants_file: discord.Attachment, items_csv: discord.Attachment):
-        # ✅ Defer immediately to avoid Unknown interaction error
+        # ✅ Defer immediately
         await interaction.response.defer()
 
         try:
@@ -76,17 +76,23 @@ def setup(bot):
                 elif item["type"] == "material":
                     rarity = item["rarity"]
 
-                    if rarity == "rare":
+                    # Special case for SILVARIN
+                    if item["name"].lower() == "silvarin":
+                        qty_left = item["quantity"]
+                        while qty_left > 0:
+                            player = participants[player_index]
+                            dist[player].append((item["name"], rarity))
+                            qty_left -= 1
+                            player_index = (player_index + 1) % n_players
+
+                    elif rarity == "rare":
                         qty_left = item["quantity"]
                         rare_cycle = set()
-
                         while qty_left > 0:
                             if len(rare_cycle) == n_players:
                                 rare_cycle.clear()
-
                             while participants[player_index] in rare_cycle:
                                 player_index = (player_index + 1) % n_players
-
                             player = participants[player_index]
                             give_count = min(qty_left, random.randint(2, 4))
                             dist[player].extend([(item["name"], rarity)] * give_count)
@@ -147,7 +153,6 @@ def setup(bot):
 
             for player, loot in dist.items():
                 counts = Counter(loot)
-                # Sort by rarity order (descending)
                 sorted_items = sorted(counts.items(), key=lambda x: -RARITY_ORDER.get(x[0][1], 0))
                 loot_text = '\n'.join(
                     f"{item}({qty})" if qty > 1 else item
