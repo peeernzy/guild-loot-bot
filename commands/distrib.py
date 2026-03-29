@@ -61,7 +61,7 @@ def setup(bot):
                     # Equipment → snake draft
                     for q in range(item["quantity"]):
                         player = participants[player_index]
-                        dist[player].append(item["name"])
+                        dist[player].append((item["name"], item["rarity"]))
                         
                         # Snake movement
                         if direction_forward:
@@ -80,41 +80,30 @@ def setup(bot):
                     
                     if rarity == "rare":
                         qty_left = item["quantity"]
-                        rare_cycle = set()  # track who already got rare material in this cycle
+                        rare_cycle = set()
                         
                         while qty_left > 0:
-                            # Reset cycle if everyone has received rare material
                             if len(rare_cycle) == n_players:
                                 rare_cycle.clear()
                             
-                            # Skip players who already got rare material in this cycle
                             while participants[player_index] in rare_cycle:
                                 player_index = (player_index + 1) % n_players
                             
                             player = participants[player_index]
-                            # Batch size: strictly 2–4
                             give_count = min(qty_left, random.randint(2, 4))
-                            
-                            dist[player].extend([item["name"]] * give_count)
+                            dist[player].extend([(item["name"], rarity)] * give_count)
                             qty_left -= give_count
-                            
-                            # Mark player as having received rare material this cycle
                             rare_cycle.add(player)
-                            
-                            # Move to next player
                             player_index = (player_index + 1) % n_players
                     
                     elif rarity in {"common", "uncommon"}:
                         if item["quantity"] > 4:
-                            # Split stack into halves
                             half1 = item["quantity"] // 2
                             half2 = item["quantity"] - half1
 
-                            # First player gets half1
                             player1 = participants[player_index]
-                            dist[player1].extend([item["name"]] * half1)
+                            dist[player1].extend([(item["name"], rarity)] * half1)
 
-                            # Advance snake index
                             if direction_forward:
                                 player_index += 1
                                 if player_index == n_players:
@@ -126,11 +115,9 @@ def setup(bot):
                                     player_index = 0
                                     direction_forward = True
 
-                            # Second player gets half2
                             player2 = participants[player_index]
-                            dist[player2].extend([item["name"]] * half2)
+                            dist[player2].extend([(item["name"], rarity)] * half2)
 
-                            # Advance snake index again
                             if direction_forward:
                                 player_index += 1
                                 if player_index == n_players:
@@ -142,11 +129,9 @@ def setup(bot):
                                     player_index = 0
                                     direction_forward = True
                         else:
-                            # Whole stack to one player
                             player = participants[player_index]
-                            dist[player].extend([item["name"]] * item["quantity"])
+                            dist[player].extend([(item["name"], rarity)] * item["quantity"])
 
-                            # Advance snake index once
                             if direction_forward:
                                 player_index += 1
                                 if player_index == n_players:
@@ -164,31 +149,17 @@ def setup(bot):
             
             for player, loot in dist.items():
                 counts = Counter(loot)
+                # Sort by rarity order (descending)
+                sorted_items = sorted(counts.items(), key=lambda x: -RARITY_ORDER.get(x[0][1], 0))
                 loot_text = '\n'.join(
                     f"{item}({qty})" if qty > 1 else item
-                    for item, qty in counts.items()
+                    for (item, rarity), qty in sorted_items
                 )
                 
                 title = f"🎒 {player} ({len(loot)}/{avg_per_player})"
                 embed = discord.Embed(title=title, color=0x00ff88)
-                
-                if len(loot_text) <= 4096:
-                    embed.description = f"```{loot_text}```"
-                    await interaction.followup.send(embed=embed)
-                else:
-                    # Split by chunks of 12 items
-                    chunk_size = 12
-                    loot_items = list(counts.items())
-                    for start in range(0, len(loot_items), chunk_size):
-                        chunk = loot_items[start:start+chunk_size]
-                        chunk_text = '\n'.join(
-                            f"{item}({qty})" if qty > 1 else item
-                            for item, qty in chunk
-                        )
-                        chunk_title = f"🎒 {player} ({start+1}-{min(start+chunk_size, len(loot_items))}/{len(loot_items)})"
-                        chunk_embed = discord.Embed(title=chunk_title, color=0x00ff88)
-                        chunk_embed.description = f"```{chunk_text}```"
-                        await interaction.followup.send(chunk_embed)
+                embed.description = f"```{loot_text}```"
+                await interaction.followup.send(embed=embed)
             
             # Summary CSV
             summary = discord.Embed(title="✅ PERFECT BALANCE COMPLETE", color=0x00aa00)
@@ -199,9 +170,10 @@ def setup(bot):
             csv_lines = ["Player,Count,Items"]
             for p, l in dist.items():
                 counts = Counter(l)
+                sorted_items = sorted(counts.items(), key=lambda x: -RARITY_ORDER.get(x[0][1], 0))
                 grouped_items = '\n'.join(
                     f"{item}({qty})" if qty > 1 else item
-                    for item, qty in counts.items()
+                    for (item, rarity), qty in sorted_items
                 )
                 csv_lines.append(f'"{p}",{len(l)},"{grouped_items}"')
             
