@@ -1,9 +1,7 @@
 import discord
 
 WELCOME_CHANNEL_ID = 1437365063278137375
-
-# 🔥 REPLACE THIS with your DIRECT image link
-WELCOME_IMAGE = "https://i.imgur.com/gYAUbNz.png"
+WELCOME_IMAGE = "https://i.imgur.com/gYAUbNz.png"  # <-- DIRECT LINK
 
 def setup(bot):
 
@@ -15,9 +13,6 @@ def setup(bot):
             if not welcome_channel:
                 print(f'⚠️ Welcome channel not found (ID: {WELCOME_CHANNEL_ID})')
                 return
-
-            # Send image
-            await welcome_channel.send(WELCOME_IMAGE)
 
             embed = discord.Embed(
                 title='🎉 New Member Joined!',
@@ -38,14 +33,13 @@ def setup(bot):
 
             embed.add_field(
                 name='🎮 Get Started',
-                value='• `/ncmd` - View all commands\n• `/items` - See rewards\n• `/points` - Check your balance',
+                value='• `/ncmd` - View commands\n• `/items` - Rewards\n• `/points` - Balance',
                 inline=False
             )
 
-            # ✅ Safe avatar
             embed.set_thumbnail(url=member.display_avatar.url)
 
-            # ✅ Fixed image usage
+            # ✅ Only show image inside embed
             embed.set_image(url=WELCOME_IMAGE)
 
             embed.set_footer(text='Welcome to the adventure!')
