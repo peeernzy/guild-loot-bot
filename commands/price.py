@@ -75,13 +75,13 @@ class PriceCog(commands.Cog):
                         color=discord.Color.green()
                     )
                     embed.set_footer(text=f"Data from CoinMarketCap API • Fetched at {timestamp}")
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    await interaction.response.send_message(embed=embed)
                 else:
-                    await interaction.response.send_message("❌ No price data available.", ephemeral=True)
+                    await interaction.response.send_message("❌ No price data available.")
 
             except Exception as e:
                 await interaction.response.send_message(
-                    f"❌ Failed to fetch prices: {str(e)}", ephemeral=True
+                    f"❌ Failed to fetch prices: {str(e)}"
                 )
 
 async def setup(bot):
