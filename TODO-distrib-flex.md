@@ -1,0 +1,1 @@
+- [x] Edit commands/distrib.py: Use csv.DictReader with header, map 'quantity'/'qty'/'count' flexibly

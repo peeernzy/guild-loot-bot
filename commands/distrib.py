@@ -26,18 +26,20 @@ def setup(bot):
 
             # Parse items
             i_text = (await items_csv.read()).decode('utf-8', errors='ignore')
-            reader = csv.reader(i_text.splitlines())
+            reader = csv.DictReader(io.StringIO(i_text))
             items = []
             for row in reader:
-                if len(row) >= 3:
-                    name = row[0].strip()
-                    try:
-                        qty = int(row[1])
-                        rarity = row[2].strip().lower()
-                        item_type = row[3].lower() if len(row) > 3 else "material"
+                row_lower = {k.lower(): v for k, v in row.items()}
+                name = (row_lower.get("name") or "").strip()
+                qty_str = row_lower.get("quantity") or row_lower.get("qty") or row_lower.get("count") or ""
+                rarity = (row_lower.get("rarity") or "").strip().lower()
+                item_type = (row_lower.get("type") or "material").strip().lower()
+                try:
+                    qty = int(qty_str)
+                    if name and qty >= 0 and rarity:
                         items.append({"name": name, "rarity": rarity, "quantity": qty, "type": item_type})
-                    except (ValueError, IndexError):
-                        continue
+                except ValueError:
+                    continue
 
             if not items:
                 return await interaction.followup.send("❌ No loot items")
@@ -77,16 +79,7 @@ def setup(bot):
                 elif item["type"] == "material":
                     rarity = item["rarity"]
 
-                    # Special case for SILVARIN (BUNDLE)
-                    if item["name"].lower() == "silvarin":
-                        qty_left = item["quantity"]
-                        while qty_left > 0:
-                            player = participants[player_index]
-                            dist[player].append((item["name"] + " (BUNDLE)", rarity))
-                            qty_left -= 1
-                            player_index = (player_index + 1) % n_players
-
-                    elif rarity == "rare":
+                    if rarity == "rare":
                         qty_left = item["quantity"]
                         rare_cycle = set()
                         while qty_left > 0:
@@ -171,7 +164,7 @@ def setup(bot):
             summary.add_field(name="Total Items", value=total_items, inline=True)
             summary.add_field(name="Avg/Player", value=avg_per_player, inline=True)
 
-            csv_lines = ["Player,Count,Items"]
+            csv_lines = ["Player,Items"]
             for p, l in dist.items():
                 counts = Counter(l)
                 sorted_items = sorted(counts.items(), key=lambda x: -RARITY_ORDER.get(x[0][1], 0))
@@ -179,7 +172,7 @@ def setup(bot):
                     f"{item}({qty})" if qty > 1 else item
                     for (item, rarity), qty in sorted_items
                 )
-                csv_lines.append(f'"{p}",{len(l)},"{grouped_items}"')
+                csv_lines.append(f'"{p}","{grouped_items}"')
 
             csv_data = "\n".join(csv_lines)
             csv_file = discord.File(io.BytesIO(csv_data.encode()), "fair_loot.csv")
